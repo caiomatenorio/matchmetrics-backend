@@ -6,6 +6,7 @@ import { RefreshTokenService } from './refresh-token/refresh-token.service'
 import { JwtService } from './jwt/jwt.service'
 import { JwtModule } from '@nestjs/jwt'
 import { PrismaModule } from 'src/prisma/prisma.module'
+import { UsersModule } from 'src/users/users.module'
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PrismaModule } from 'src/prisma/prisma.module'
       signOptions: { expiresIn: '5m' },
     }),
     PrismaModule,
+    UsersModule,
   ],
   providers: [AuthService, SessionService, RefreshTokenService, JwtService],
   controllers: [AuthController],
