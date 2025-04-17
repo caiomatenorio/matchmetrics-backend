@@ -7,12 +7,12 @@ import SuccessResponseBody, {
 } from 'src/common/response-bodies/success-response-body'
 import { Public } from 'src/auth/auth.guard'
 
-@Controller('users')
+@Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Public()
-  @Post()
+  @Post('sign-up')
   @UsePipes(new ZodValidationPipe(signUpSchema))
   @HttpCode(HttpStatus.CREATED)
   async createAdmin(@Body() body: SignUpInput): Promise<NoDataSuccessResponseBody> {
