@@ -25,7 +25,6 @@ export class SessionService {
     const refreshToken = this.refreshTokenService.generateRefreshToken()
     const expiresAt = new Date(Date.now() + this.sessionExpiresInMillis)
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const { id: sessionId } = await this.prismaService.session.create({
       data: { userId, refreshToken, expiresAt },
       select: { id: true },
@@ -33,7 +32,6 @@ export class SessionService {
 
     const email = await this.usersService.getEmailById(userId)
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const accessToken = await this.jwtService.generateJwt(sessionId, userId, email)
 
     return { accessToken, refreshToken }

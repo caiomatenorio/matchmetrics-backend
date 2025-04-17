@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import EmailAlreadyInUseException from 'src/common/exceptions/email-already-in-use.exception'
 import { PrismaService } from 'src/prisma/prisma.service'
-import * as argon2 from 'argon2'
 import UserDoesNotExistException from 'src/common/exceptions/user-does-not-exist.exception'
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class UsersService {
@@ -12,14 +12,8 @@ export class UsersService {
     const isEmailInUse = await this.isEmailInUse(email)
     if (isEmailInUse) throw new EmailAlreadyInUseException(email)
 
-    const encryptedPassword = await argon2.hash(password)
-
-    await this.prismaService.user.create({
-      data: {
-        email,
-        encryptedPassword,
-      },
-    })
+    const hashedPassword = await bcrypt.hash(password, 10)
+    await this.prismaService.user.create({ data: { email, password: hashedPassword } })
   }
 
   async isEmailInUse(email: string): Promise<boolean> {
@@ -49,7 +43,6 @@ export class UsersService {
 
     if (!email) throw new UserDoesNotExistException()
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return email
   }
 }
