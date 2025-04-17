@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { SessionService } from './session/session.service'
 import { UsersService } from 'src/users/users.service'
-import { Response } from 'express'
+import { Request, Response } from 'express'
 
 @Injectable()
 export class AuthService {
@@ -14,5 +14,9 @@ export class AuthService {
     await this.usersService.validateCredentials(email, password)
     const userId = await this.usersService.getIdByEmail(email)
     await this.sessionService.createSession(response, userId)
+  }
+
+  async logOut(request: Request, response: Response): Promise<void> {
+    await this.sessionService.deleteSession(request, response)
   }
 }

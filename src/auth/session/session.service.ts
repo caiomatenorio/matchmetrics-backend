@@ -101,4 +101,17 @@ export class SessionService {
 
     return { newAccessToken, newRefreshToken }
   }
+
+  async deleteSession(request: Request, response: Response): Promise<void> {
+    const { refreshToken } = this.getTokenHeaders(request)
+    if (!refreshToken) throw new UserUnauthorizedException()
+
+    try {
+      await this.prismaService.session.delete({ where: { refreshToken } })
+    } catch {
+      throw new UserUnauthorizedException() // If the refresh token is not valid, return 401
+    }
+
+    this.unsetTokenHeaders(response) // Remove the tokens from the response headers
+  }
 }
