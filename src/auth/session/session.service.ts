@@ -4,6 +4,7 @@ import { UsersService } from 'src/users/users.service'
 import { RefreshTokenService } from '../refresh-token/refresh-token.service'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { JwtService } from '../jwt/jwt.service'
+import UserUnauthorizedException from 'src/common/exceptions/user-unauthorized.exception'
 
 @Injectable()
 export class SessionService {
@@ -52,5 +53,50 @@ export class SessionService {
     const accessToken = await this.jwtService.generateJwt(sessionId, userId, email)
 
     this.setTokenHeaders(response, accessToken, refreshToken) // Send the tokens in the response headers
+  }
+
+  async validateSession(request: Request, response: Response): Promise<void> {
+    const { accessToken, refreshToken } = this.getTokenHeaders(request)
+
+    // If there's an access token and it's valid, proceed
+    if (accessToken && (await this.jwtService.verifyJwt(accessToken))) return
+
+    if (refreshToken) {
+      try {
+        const { newAccessToken, newRefreshToken } = await this.refreshSession(refreshToken)
+        this.setTokenHeaders(response, newAccessToken, newRefreshToken) // Send the new tokens in the response headers
+      } catch {
+        /* empty */
+      }
+    }
+
+    this.unsetTokenHeaders(response)
+    throw new UserUnauthorizedException() // If there's no valid access token and no valid refresh token, return 401
+  }
+
+  async refreshSession(
+    refreshToken: string
+  ): Promise<{ newAccessToken: string; newRefreshToken: string }> {
+    const { id: sessionId } =
+      (await this.prismaService.session.findUnique({
+        where: { refreshToken },
+        select: { id: true },
+      })) ?? {} // If the session doesn't exist, id will be undefined
+
+    if (!sessionId) throw new Error('Session not found') // Generic error to quit validateSession try/catch block
+
+    const newRefreshToken = this.refreshTokenService.generateRefreshToken()
+    const expiresAt = new Date(Date.now() + this.sessionExpiresInMillis)
+
+    const { userId } = await this.prismaService.session.update({
+      where: { id: sessionId },
+      data: { refreshToken: newRefreshToken, expiresAt },
+      select: { userId: true },
+    })
+    const email = await this.usersService.getEmailById(userId)
+
+    const newAccessToken = await this.jwtService.generateJwt(sessionId, userId, email)
+
+    return { newAccessToken, newRefreshToken }
   }
 }

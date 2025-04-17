@@ -3,6 +3,7 @@ enum ErrorCode {
   EMAIL_ALREADY_IN_USE = 'E001',
   VALIDATION_ERROR = 'E002',
   USER_DOES_NOT_EXIST = 'E003',
+  USER_UNAUTHORIZED = 'E004',
 }
 
 export default ErrorCode
