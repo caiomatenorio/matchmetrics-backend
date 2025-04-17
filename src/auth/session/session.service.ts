@@ -5,6 +5,7 @@ import { RefreshTokenService } from '../refresh-token/refresh-token.service'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { JwtService } from '../jwt/jwt.service'
 import UserUnauthorizedException from 'src/common/exceptions/user-unauthorized.exception'
+import { Request, Response } from 'express'
 
 @Injectable()
 export class SessionService {
@@ -20,20 +21,20 @@ export class SessionService {
   }
 
   setTokenHeaders(response: Response, accessToken: string, refreshToken: string): void {
-    response.headers.set('Authorization', `Bearer ${accessToken}`)
-    response.headers.set('X-Refresh-Token', refreshToken)
+    response.setHeader('Authorization', `Bearer ${accessToken}`)
+    response.setHeader('X-Refresh-Token', refreshToken)
   }
 
-  getTokenHeaders(request: Request): { accessToken: string; refreshToken: string } {
-    const accessToken = request.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
-    const refreshToken = request.headers.get('X-Refresh-Token') ?? ''
+  getTokenHeaders(request: Request): { accessToken?: string; refreshToken?: string } {
+    const accessToken = request.headers['authorization']?.replace('Bearer ', '')
+    const refreshToken = request.headers['x-refresh-token'] as string | undefined
     return { accessToken, refreshToken }
   }
 
   unsetTokenHeaders(response: Response): void {
     // The client should remove the tokens from storage
-    response.headers.set('Authorization', '')
-    response.headers.set('X-Refresh-Token', '')
+    response.setHeader('Authorization', '')
+    response.setHeader('X-Refresh-Token', '')
   }
 
   async createSession(response: Response, userId: string): Promise<void> {

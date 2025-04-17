@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, SetMetadata } from '@nestjs/
 import { Observable } from 'rxjs'
 import { SessionService } from './session/session.service'
 import { Reflector } from '@nestjs/core'
+import { Request, Response } from 'express'
 
 @Injectable()
 export class AuthGuard implements CanActivate {

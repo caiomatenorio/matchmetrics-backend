@@ -3,6 +3,7 @@ import EmailAlreadyInUseException from 'src/common/exceptions/email-already-in-u
 import { PrismaService } from 'src/prisma/prisma.service'
 import UserDoesNotExistException from 'src/common/exceptions/user-does-not-exist.exception'
 import * as bcrypt from 'bcrypt'
+import InvalidCredentialsException from 'src/common/exceptions/invalid-credentials.exception'
 
 @Injectable()
 export class UsersService {
@@ -44,5 +45,28 @@ export class UsersService {
     if (!email) throw new UserDoesNotExistException()
 
     return email
+  }
+
+  async getIdByEmail(email: string): Promise<string> {
+    const { id } =
+      (await this.prismaService.user.findUnique({
+        where: { email },
+        select: { id: true },
+      })) ?? {}
+
+    if (!id) throw new UserDoesNotExistException()
+
+    return id
+  }
+
+  async validateCredentials(email: string, password: string): Promise<void> {
+    const admin = await this.prismaService.user.findUnique({
+      where: { email },
+      select: { password: true },
+    })
+
+    if (admin && (await bcrypt.compare(password, admin.password))) return
+
+    throw new InvalidCredentialsException()
   }
 }
