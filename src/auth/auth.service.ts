@@ -10,6 +10,10 @@ export class AuthService {
     private readonly sessionService: SessionService
   ) {}
 
+  async signUp(email: string, password: string): Promise<void> {
+    await this.usersService.createUser(email, password)
+  }
+
   async logIn(email: string, password: string, response: Response): Promise<void> {
     await this.usersService.validateCredentials(email, password)
     const userId = await this.usersService.getIdByEmail(email)
