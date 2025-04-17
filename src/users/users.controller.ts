@@ -5,16 +5,19 @@ import signUpSchema, { SignUpInput } from './sign-up.schema'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
+import { Public } from 'src/auth/auth.guard'
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // TODO: Implement `@Public()` decorator
+  @Public()
   @Post()
   @UsePipes(new ZodValidationPipe(signUpSchema))
   @HttpCode(HttpStatus.CREATED)
   async createAdmin(@Body() body: SignUpInput): Promise<NoDataSuccessResponseBody> {
+    // Disable the following line because we are sure that the body is valid
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     await this.usersService.createUser(body.email, body.password)
 
     return new SuccessResponseBody(HttpStatus.CREATED, 'User created successfully')

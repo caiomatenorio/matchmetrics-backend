@@ -65,6 +65,7 @@ export class UsersService {
       select: { password: true },
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     if (admin && (await bcrypt.compare(password, admin.password))) return
 
     throw new InvalidCredentialsException()
