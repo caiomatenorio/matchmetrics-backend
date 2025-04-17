@@ -55,16 +55,17 @@ export class SessionService {
     this.setTokenHeaders(response, accessToken, refreshToken) // Send the tokens in the response headers
   }
 
-  async validateSession(request: Request, response: Response): Promise<void> {
+  async validateSession(request: Request, response: Response): Promise<boolean> {
     const { accessToken, refreshToken } = this.getTokenHeaders(request)
 
     // If there's an access token and it's valid, proceed
-    if (accessToken && (await this.jwtService.verifyJwt(accessToken))) return
+    if (accessToken && (await this.jwtService.verifyJwt(accessToken))) return true
 
     if (refreshToken) {
       try {
         const { newAccessToken, newRefreshToken } = await this.refreshSession(refreshToken)
         this.setTokenHeaders(response, newAccessToken, newRefreshToken) // Send the new tokens in the response headers
+        return true
       } catch {
         /* empty */
       }
