@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Res, UsePipes } from '@nestjs/common'
-import { AuthService } from './auth.service'
-import { Public } from './auth.guard'
+import { AuthService } from '../auth.service'
+import { Public } from '../auth.guard'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import { LogInInput, logInSchema } from './log-in.schema'
 import { Response } from 'express'
@@ -8,12 +8,12 @@ import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
 
-@Controller()
-export class AuthController {
+@Controller('log-in')
+export class LogInController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
-  @Post('login')
+  @Post()
   @UsePipes(new ZodValidationPipe(logInSchema))
   @HttpCode(HttpStatus.OK)
   async logIn(
