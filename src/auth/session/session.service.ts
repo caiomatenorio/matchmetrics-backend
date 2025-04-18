@@ -6,6 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service'
 import { JwtService } from '../jwt/jwt.service'
 import UserUnauthorizedException from 'src/common/exceptions/user-unauthorized.exception'
 import { Request, Response } from 'express'
+import { Cron, CronExpression } from '@nestjs/schedule'
 
 @Injectable()
 export class SessionService {
@@ -81,10 +82,9 @@ export class SessionService {
   ): Promise<{ newAccessToken: string; newRefreshToken: string }> {
     const { id: sessionId } =
       (await this.prismaService.session.findUnique({
-        where: { refreshToken },
+        where: { refreshToken, expiresAt: { gte: new Date() } },
         select: { id: true },
       })) ?? {} // If the session doesn't exist, id will be undefined
-
     if (!sessionId) throw new Error('Session not found') // Generic error to quit validateSession try/catch block
 
     const newRefreshToken = this.refreshTokenService.generateRefreshToken()
@@ -113,5 +113,10 @@ export class SessionService {
     }
 
     this.unsetTokenHeaders(response) // Remove the tokens from the response headers
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async cleanupExpiredSessions(): Promise<void> {
+    await this.prismaService.session.deleteMany({ where: { expiresAt: { lt: new Date() } } }) // Delete all sessions that have expired
   }
 }
