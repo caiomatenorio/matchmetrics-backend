@@ -81,10 +81,9 @@ export class SessionService {
   ): Promise<{ newAccessToken: string; newRefreshToken: string }> {
     const { id: sessionId } =
       (await this.prismaService.session.findUnique({
-        where: { refreshToken },
+        where: { refreshToken, expiresAt: { gte: new Date() } },
         select: { id: true },
       })) ?? {} // If the session doesn't exist, id will be undefined
-
     if (!sessionId) throw new Error('Session not found') // Generic error to quit validateSession try/catch block
 
     const newRefreshToken = this.refreshTokenService.generateRefreshToken()
