@@ -27,12 +27,12 @@ export class UsersService {
   }
 
   async userExists(userId: string): Promise<boolean> {
-    const admin = await this.prismaService.user.findUnique({
+    const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: { id: true },
     })
 
-    return !!admin
+    return !!user
   }
 
   async getUserEmailById(userId: string): Promise<string> {
