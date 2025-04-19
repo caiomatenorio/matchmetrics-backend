@@ -61,7 +61,7 @@ export class SessionService {
     const { accessToken, refreshToken } = this.getTokenHeaders(request)
 
     // If there's an access token and it's valid, proceed
-    if (accessToken && (await this.jwtService.verifyJwt(accessToken))) return true
+    if (accessToken && (await this.jwtService.isJwtValid(accessToken))) return true
 
     if (refreshToken) {
       try {
