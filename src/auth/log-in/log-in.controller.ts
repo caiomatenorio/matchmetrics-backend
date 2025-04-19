@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Res, UsePipes } from '@nestjs/common'
+import { Body, Controller, HttpStatus, Post, Res, UsePipes } from '@nestjs/common'
 import { AuthService } from '../auth.service'
 import { Public } from '../auth.guard'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
@@ -15,7 +15,6 @@ export class LogInController {
   @Public()
   @Post()
   @UsePipes(new ZodValidationPipe(logInSchema))
-  @HttpCode(HttpStatus.OK)
   async logIn(
     @Body() body: LogInInput,
     @Res({ passthrough: true }) response: Response

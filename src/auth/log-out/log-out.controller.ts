@@ -1,4 +1,4 @@
-import { Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common'
+import { Controller, HttpStatus, Post, Req, Res } from '@nestjs/common'
 import { Request, Response } from 'express'
 import { AuthService } from '../auth.service'
 import SuccessResponseBody, {
@@ -10,7 +10,6 @@ export class LogOutController {
   constructor(private readonly authService: AuthService) {}
 
   @Post()
-  @HttpCode(HttpStatus.OK)
   async logOut(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response
