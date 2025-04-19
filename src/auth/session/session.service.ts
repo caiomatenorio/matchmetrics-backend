@@ -45,7 +45,7 @@ export class SessionService {
     const userExists = await this.usersService.userExists(userId)
     if (!userExists) throw new UserDoesNotExistException()
 
-    const email = await this.usersService.getEmailById(userId)
+    const email = await this.usersService.getUserEmailById(userId)
 
     const refreshToken = this.refreshTokenService.generateRefreshToken()
     const expiresAt = new Date(Date.now() + this.sessionExpiresInMillis)
@@ -98,7 +98,7 @@ export class SessionService {
       data: { refreshToken: newRefreshToken, expiresAt },
       select: { userId: true },
     })
-    const email = await this.usersService.getEmailById(userId)
+    const email = await this.usersService.getUserEmailById(userId)
 
     const newAccessToken = await this.jwtService.generateJwt(sessionId, userId, email)
 

@@ -25,12 +25,12 @@ export class JwtService {
     }
   }
 
-  // async getJwtPayload(jwt: string): Promise<JwtPayload | null> {
-  //   try {
-  //     const payload: JwtPayload = await this.nestJwtService.verifyAsync(jwt)
-  //     return payload
-  //   } catch {
-  //     return null
-  //   }
-  // }
+  async getJwtPayload(jwt: string): Promise<JwtPayload | null> {
+    try {
+      const payload: JwtPayload = await this.nestJwtService.verifyAsync(jwt)
+      return payload
+    } catch {
+      return null
+    }
+  }
 }

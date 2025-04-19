@@ -9,8 +9,8 @@ import { UsersModule } from 'src/users/users.module'
 import { SignUpController } from './sign-up/sign-up.controller'
 import { LogInController } from './log-in/log-in.controller'
 import { LogOutController } from './log-out/log-out.controller'
-import { WhoamiController } from './whoami/whoami.controller';
-import { StatusController } from './status/status.controller';
+import { WhoamiController } from './whoami/whoami.controller'
+import { StatusController } from './status/status.controller'
 
 @Module({
   imports: [
@@ -23,6 +23,12 @@ import { StatusController } from './status/status.controller';
     UsersModule,
   ],
   providers: [AuthService, SessionService, RefreshTokenService, JwtService],
-  controllers: [SignUpController, LogInController, LogOutController, WhoamiController, StatusController],
+  controllers: [
+    SignUpController,
+    LogInController,
+    LogOutController,
+    WhoamiController,
+    StatusController,
+  ],
 })
 export class AuthModule {}

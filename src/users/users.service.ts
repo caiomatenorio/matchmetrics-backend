@@ -35,7 +35,7 @@ export class UsersService {
     return !!admin
   }
 
-  async getEmailById(userId: string): Promise<string> {
+  async getUserEmailById(userId: string): Promise<string> {
     const { email } =
       (await this.prismaService.user.findUnique({
         where: { id: userId },
@@ -47,7 +47,7 @@ export class UsersService {
     return email
   }
 
-  async getIdByEmail(email: string): Promise<string> {
+  async getUserIdByEmail(email: string): Promise<string> {
     const { id } =
       (await this.prismaService.user.findUnique({
         where: { email },
