@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import UserDoesNotExistException from 'src/common/exceptions/user-does-not-exist.exception'
 import { UsersService } from 'src/users/users.service'
 import { RefreshTokenService } from '../refresh-token/refresh-token.service'
@@ -7,14 +7,17 @@ import { JwtService } from '../jwt/jwt.service'
 import UserUnauthorizedException from 'src/common/exceptions/user-unauthorized.exception'
 import { Request, Response } from 'express'
 import { Cron, CronExpression } from '@nestjs/schedule'
+import { Session } from 'generated/prisma'
 
 @Injectable()
 export class SessionService {
   private readonly sessionExpiresInMillis: number
 
   constructor(
-    private readonly usersService: UsersService,
+    @Inject(forwardRef(() => RefreshTokenService))
     private readonly refreshTokenService: RefreshTokenService,
+
+    private readonly usersService: UsersService,
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService
   ) {
@@ -118,5 +121,11 @@ export class SessionService {
   @Cron(CronExpression.EVERY_HOUR)
   async cleanupExpiredSessions(): Promise<void> {
     await this.prismaService.session.deleteMany({ where: { expiresAt: { lt: new Date() } } }) // Delete all sessions that have expired
+  }
+
+  async getSessionByRefreshToken(refreshToken: string): Promise<Session | null> {
+    return this.prismaService.session.findUnique({
+      where: { refreshToken, expiresAt: { gte: new Date() } },
+    })
   }
 }
