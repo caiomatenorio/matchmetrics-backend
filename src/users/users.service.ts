@@ -27,15 +27,15 @@ export class UsersService {
   }
 
   async userExists(userId: string): Promise<boolean> {
-    const admin = await this.prismaService.user.findUnique({
+    const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: { id: true },
     })
 
-    return !!admin
+    return !!user
   }
 
-  async getEmailById(userId: string): Promise<string> {
+  async getUserEmailById(userId: string): Promise<string> {
     const { email } =
       (await this.prismaService.user.findUnique({
         where: { id: userId },
@@ -47,7 +47,7 @@ export class UsersService {
     return email
   }
 
-  async getIdByEmail(email: string): Promise<string> {
+  async getUserIdByEmail(email: string): Promise<string> {
     const { id } =
       (await this.prismaService.user.findUnique({
         where: { email },
@@ -65,7 +65,6 @@ export class UsersService {
       select: { password: true },
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     if (admin && (await bcrypt.compare(password, admin.password))) return
 
     throw new InvalidCredentialsException()

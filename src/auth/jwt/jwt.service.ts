@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable } from '@nestjs/common'
 import { JwtService as NestJwtService } from '@nestjs/jwt'
 import JwtPayload from './jwt-payload'
@@ -20,7 +16,16 @@ export class JwtService {
     return await this.nestJwtService.signAsync(payload)
   }
 
-  async verifyJwt(jwt: string): Promise<JwtPayload | null> {
+  async isJwtValid(jwt: string): Promise<boolean> {
+    try {
+      await this.nestJwtService.verifyAsync(jwt)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  async getJwtPayload(jwt: string): Promise<JwtPayload | null> {
     try {
       const payload: JwtPayload = await this.nestJwtService.verifyAsync(jwt)
       return payload
