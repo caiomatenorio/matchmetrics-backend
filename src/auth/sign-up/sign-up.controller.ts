@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UsePipes } from '@nestjs/common'
+import { Body, Controller, HttpStatus, Post, UsePipes } from '@nestjs/common'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import signUpSchema, { SignUpInput } from './sign-up.schema'
 import SuccessResponseBody, {
@@ -14,7 +14,6 @@ export class SignUpController {
   @Public()
   @Post()
   @UsePipes(new ZodValidationPipe(signUpSchema))
-  @HttpCode(HttpStatus.CREATED)
   async createAdmin(@Body() body: SignUpInput): Promise<NoDataSuccessResponseBody> {
     await this.authService.signUp(body.email, body.password)
 
