@@ -37,17 +37,30 @@ export class AuthService {
     return false
   }
 
-  async whoAmI(request: Request): Promise<{ email: string }> {
+  async whoAmI(
+    request: Request,
+    include: { id: boolean; email: boolean } = { id: false, email: true }
+  ): Promise<{ id?: string; email?: string }> {
     const { accessToken, refreshToken } = this.sessionService.getTokenHeaders(request)
 
     if (accessToken) {
-      const { email } = (await this.jwtService.getJwtPayload(accessToken)) ?? {} // If the token is invalid, email will be undefined
-      if (email) return { email }
+      const jwtPayload = await this.jwtService.getJwtPayload(accessToken)
+
+      if (jwtPayload)
+        return {
+          id: include.id ? jwtPayload.userId : undefined,
+          email: include.email ? jwtPayload.email : undefined,
+        }
     }
 
     if (refreshToken) {
       const { userId } = (await this.sessionService.getSessionByRefreshToken(refreshToken)) ?? {}
-      if (userId) return { email: await this.usersService.getUserEmailById(userId) }
+
+      if (userId)
+        return {
+          id: include.id ? userId : undefined,
+          email: include.email ? await this.usersService.getUserEmailById(userId) : undefined,
+        }
     }
 
     throw new UserUnauthorizedException()
