@@ -29,7 +29,7 @@ model Session {
 
 model Championship {
     id                 String   @id @default(cuid())
-    name               String   @unique
+    name               String
     slug               String   @unique
     season             String
     start              DateTime
