@@ -1,10 +1,11 @@
-import { Controller, Get, HttpStatus, Query, UsePipes } from '@nestjs/common'
+import { Controller, Get, HttpStatus, Query, Req, UsePipes } from '@nestjs/common'
 import { ChampionshipsService } from './championships.service'
 import SuccessResponseBody from 'src/common/response-bodies/success-response-body'
 import { Championship } from 'generated/prisma'
 import { Public } from 'src/auth/auth.guard'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
-import { GetAllChampionshipsQuery, getAllChampionshipsQuerySchema } from './championship.schema'
+import { GetChampionshipsQuery, getChampionshipsQuerySchema } from './championship.schema'
+import { Request } from 'express'
 
 @Controller('championships')
 export class ChampionshipsController {
@@ -12,11 +13,14 @@ export class ChampionshipsController {
 
   @Public()
   @Get()
-  @UsePipes(new ZodValidationPipe(getAllChampionshipsQuerySchema))
+  @UsePipes(new ZodValidationPipe(getChampionshipsQuerySchema))
   async getAllChampionships(
-    @Query() query: GetAllChampionshipsQuery
-  ): Promise<SuccessResponseBody<Omit<Championship, 'start' | 'end'>[]>> {
-    const championships = await this.championshipsService.getAllChampionships(query)
+    @Req() request: Request,
+    @Query() query: GetChampionshipsQuery
+  ): Promise<
+    SuccessResponseBody<(Omit<Championship, 'start' | 'end'> & { favorited: boolean })[]>
+  > {
+    const championships = await this.championshipsService.getAllChampionships(request, query)
 
     return new SuccessResponseBody(
       HttpStatus.OK,
