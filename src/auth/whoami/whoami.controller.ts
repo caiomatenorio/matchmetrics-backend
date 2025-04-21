@@ -10,7 +10,7 @@ export class WhoamiController {
   @Get()
   async whoAmI(
     @Req() request: Request
-  ): Promise<SuccessResponseBody<{ id?: string; email?: string }>> {
+  ): Promise<SuccessResponseBody<{ id: string; email: string }>> {
     const data = await this.authService.whoAmI(request)
 
     return new SuccessResponseBody(HttpStatus.OK, 'User information retrieved successfully', data)
