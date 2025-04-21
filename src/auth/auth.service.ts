@@ -37,17 +37,17 @@ export class AuthService {
     return false
   }
 
-  async whoAmI(request: Request): Promise<{ email: string }> {
+  async whoAmI(request: Request): Promise<{ id: string; email: string }> {
     const { accessToken, refreshToken } = this.sessionService.getTokenHeaders(request)
 
     if (accessToken) {
-      const { email } = (await this.jwtService.getJwtPayload(accessToken)) ?? {} // If the token is invalid, email will be undefined
-      if (email) return { email }
+      const { userId: id, email } = (await this.jwtService.getJwtPayload(accessToken)) ?? {}
+      if (id && email) return { id, email }
     }
 
     if (refreshToken) {
       const { userId } = (await this.sessionService.getSessionByRefreshToken(refreshToken)) ?? {}
-      if (userId) return { email: await this.usersService.getUserEmailById(userId) }
+      if (userId) return { id: userId, email: await this.usersService.getUserEmailById(userId) }
     }
 
     throw new UserUnauthorizedException()
