@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service'
 import UserDoesNotExistException from 'src/common/exceptions/user-does-not-exist.exception'
 import * as bcrypt from 'bcrypt'
 import InvalidCredentialsException from 'src/common/exceptions/invalid-credentials.exception'
+import { AuthenticatedRole, convertPrismaRoleToRole } from 'src/auth/roles'
 
 @Injectable()
 export class UsersService {
@@ -57,6 +58,18 @@ export class UsersService {
     if (!id) throw new UserDoesNotExistException()
 
     return id
+  }
+
+  async getUserRoleById(userId: string): Promise<AuthenticatedRole> {
+    const { role } =
+      (await this.prismaService.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      })) ?? {}
+
+    if (!role) throw new UserDoesNotExistException()
+
+    return convertPrismaRoleToRole(role)
   }
 
   async validateCredentials(email: string, password: string): Promise<void> {

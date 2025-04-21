@@ -4,7 +4,7 @@ import { UsersService } from 'src/users/users.service'
 import { Request, Response } from 'express'
 import { JwtService } from './jwt/jwt.service'
 import { RefreshTokenService } from './refresh-token/refresh-token.service'
-import UserUnauthorizedException from 'src/common/exceptions/user-unauthorized.exception'
+import UnauthenticatedException from 'src/common/exceptions/unauthenticated.exception'
 
 @Injectable()
 export class AuthService {
@@ -50,6 +50,6 @@ export class AuthService {
       if (userId) return { id: userId, email: await this.usersService.getUserEmailById(userId) }
     }
 
-    throw new UserUnauthorizedException()
+    throw new UnauthenticatedException()
   }
 }

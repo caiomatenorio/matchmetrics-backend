@@ -3,13 +3,13 @@ import ErrorResponseBody from '../response-bodies/error-response-body'
 import ConventionalHttpException from './conventional-http.exception'
 import ErrorCode from '../response-bodies/error-code'
 
-export default class UserUnauthorizedException extends ConventionalHttpException {
+export default class UnauthenticatedException extends ConventionalHttpException {
   constructor() {
     super(
       new ErrorResponseBody(
         HttpStatus.UNAUTHORIZED,
-        ErrorCode.USER_UNAUTHORIZED,
-        'User is unauthorized'
+        ErrorCode.UNAUTHENTICATED,
+        'Authentication required to access this resource.'
       )
     )
   }

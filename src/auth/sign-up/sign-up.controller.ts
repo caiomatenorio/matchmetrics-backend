@@ -4,14 +4,15 @@ import signUpSchema, { SignUpInput } from './sign-up.schema'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
-import { Public } from 'src/auth/auth.guard'
 import { AuthService } from '../auth.service'
+import { MinimumRole } from '../auth.decorator'
+import Role from '../roles'
 
 @Controller('sign-up')
 export class SignUpController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
+  @MinimumRole(Role.GUEST)
   @Post()
   @UsePipes(new ZodValidationPipe(signUpSchema))
   @HttpCode(HttpStatus.CREATED)

@@ -4,10 +4,12 @@ import { UsersService } from 'src/users/users.service'
 import { RefreshTokenService } from '../refresh-token/refresh-token.service'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { JwtService } from '../jwt/jwt.service'
-import UserUnauthorizedException from 'src/common/exceptions/user-unauthorized.exception'
 import { Request, Response } from 'express'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { Session } from 'generated/prisma'
+import RoleUnauthorizedException from 'src/common/exceptions/role-unauthorized.exception'
+import { AuthenticatedRole } from '../roles'
+import UnauthenticatedException from 'src/common/exceptions/unauthenticated.exception'
 
 @Injectable()
 export class SessionService {
@@ -46,6 +48,7 @@ export class SessionService {
     if (!userExists) throw new UserDoesNotExistException()
 
     const email = await this.usersService.getUserEmailById(userId)
+    const userRole = await this.usersService.getUserRoleById(userId)
 
     const refreshToken = this.refreshTokenService.generateRefreshToken()
     const expiresAt = new Date(Date.now() + this.sessionExpiresInMillis)
@@ -55,20 +58,31 @@ export class SessionService {
       select: { id: true },
     })
 
-    const accessToken = await this.jwtService.generateJwt(sessionId, userId, email)
+    const accessToken = await this.jwtService.generateJwt(sessionId, userId, email, userRole)
 
     this.setTokenHeaders(response, accessToken, refreshToken) // Send the tokens in the response headers
   }
 
-  async validateSession(request: Request, response: Response): Promise<boolean> {
+  async validateSession(
+    request: Request,
+    response: Response,
+    minimumRole: AuthenticatedRole
+  ): Promise<boolean> {
     const { accessToken, refreshToken } = this.getTokenHeaders(request)
 
     // If there's an access token and it's valid, proceed
-    if (accessToken && (await this.jwtService.isJwtValid(accessToken))) return true
+    if (accessToken && (await this.jwtService.isJwtValid(accessToken))) {
+      const role = await this.jwtService.getRoleFromJwtOrThrow(accessToken)
+      if (role < minimumRole) throw new RoleUnauthorizedException(role, minimumRole)
+      return true
+    }
 
     if (refreshToken) {
       try {
-        const { newAccessToken, newRefreshToken } = await this.refreshSession(refreshToken)
+        const { newAccessToken, newRefreshToken } = await this.refreshSession(
+          refreshToken,
+          minimumRole
+        )
         this.setTokenHeaders(response, newAccessToken, newRefreshToken) // Send the new tokens in the response headers
         return true
       } catch {
@@ -77,11 +91,12 @@ export class SessionService {
     }
 
     this.unsetTokenHeaders(response)
-    throw new UserUnauthorizedException() // If there's no valid access token and no valid refresh token, return 401
+    throw new UnauthenticatedException() // If there's no valid access token and no valid refresh token, return 401
   }
 
   async refreshSession(
-    refreshToken: string
+    refreshToken: string,
+    minimumRole: AuthenticatedRole
   ): Promise<{ newAccessToken: string; newRefreshToken: string }> {
     const { id: sessionId } =
       (await this.prismaService.session.findUnique({
@@ -98,21 +113,23 @@ export class SessionService {
       data: { refreshToken: newRefreshToken, expiresAt },
       select: { userId: true },
     })
-    const email = await this.usersService.getUserEmailById(userId)
 
-    const newAccessToken = await this.jwtService.generateJwt(sessionId, userId, email)
+    const email = await this.usersService.getUserEmailById(userId)
+    const userRole = await this.usersService.getUserRoleById(userId)
+    if (userRole < minimumRole) throw new RoleUnauthorizedException(userRole, minimumRole)
+    const newAccessToken = await this.jwtService.generateJwt(sessionId, userId, email, userRole)
 
     return { newAccessToken, newRefreshToken }
   }
 
   async deleteSession(request: Request, response: Response): Promise<void> {
     const { refreshToken } = this.getTokenHeaders(request)
-    if (!refreshToken) throw new UserUnauthorizedException()
+    if (!refreshToken) throw new UnauthenticatedException()
 
     try {
       await this.prismaService.session.delete({ where: { refreshToken } })
     } catch {
-      throw new UserUnauthorizedException() // If the refresh token is not valid, return 401
+      throw new UnauthenticatedException() // If the refresh token is not valid, return 401
     }
 
     this.unsetTokenHeaders(response) // Remove the tokens from the response headers
