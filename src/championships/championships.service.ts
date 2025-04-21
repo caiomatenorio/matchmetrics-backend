@@ -14,9 +14,6 @@ export class ChampionshipsService {
   ) {}
 
   private convertYearQueryToDate(year?: number): { startDate: Date; endDate: Date } {
-    // If year is not provided, set start date to 0 and end date to 2100
-    // This will include all championships from the beginning of time to 2100
-    // If year is provided, set start date to January 1st of that year and end date to January 1st of the next year
     const startDate = new Date(year ?? 0, 0)
     const endDate = new Date(year ? year + 1 : 2100, 0)
 
