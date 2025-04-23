@@ -2,14 +2,13 @@ import { Controller, Get, HttpStatus, Req } from '@nestjs/common'
 import SuccessResponseBody from 'src/common/response-bodies/success-response-body'
 import { AuthService } from '../auth.service'
 import { Request } from 'express'
-import { MinimumRole } from '../auth.decorator'
-import Role from '../roles'
+import { Public } from '../auth.decorator'
 
 @Controller('auth/status')
 export class StatusController {
   constructor(private readonly authService: AuthService) {}
 
-  @MinimumRole(Role.GUEST)
+  @Public()
   @Get()
   async getAuthStatus(
     @Req() request: Request

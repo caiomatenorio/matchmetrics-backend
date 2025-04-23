@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { JwtService as NestJwtService } from '@nestjs/jwt'
 import JwtPayload from './jwt-payload'
-import { AuthenticatedRole } from '../roles'
-import UnauthenticatedException from 'src/common/exceptions/unauthenticated.exception'
+import AuthenticatedRole from '../roles/authenticated.role'
 
 @Injectable()
 export class JwtService {
@@ -42,10 +41,8 @@ export class JwtService {
     }
   }
 
-  async getRoleFromJwtOrThrow(jwt: string): Promise<AuthenticatedRole> {
-    const payload = await this.getJwtPayload(jwt)
-    if (!payload) throw new UnauthenticatedException()
-
-    return payload.role
+  async getRoleFromJwt(jwt: string): Promise<AuthenticatedRole | null> {
+    const { role } = (await this.getJwtPayload(jwt)) ?? {}
+    return role ?? null
   }
 }

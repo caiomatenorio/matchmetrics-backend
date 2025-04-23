@@ -1,5 +1,9 @@
 import { SetMetadata } from '@nestjs/common'
-import Role from './roles'
+import Guest from './roles/guest.role'
+import User from './roles/user.role'
+import Admin from './roles/admin.role'
 
 export const AUTH_KEY = 'roles'
-export const MinimumRole = (minimumRole: Role) => SetMetadata(AUTH_KEY, minimumRole)
+export const Public = () => SetMetadata(AUTH_KEY, new Guest())
+export const Authenticated = () => SetMetadata(AUTH_KEY, new User())
+export const AdminOnly = () => SetMetadata(AUTH_KEY, new Admin())

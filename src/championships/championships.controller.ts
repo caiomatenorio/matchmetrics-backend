@@ -5,14 +5,13 @@ import { Championship } from 'generated/prisma'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import { GetChampionshipsQuery, getChampionshipsQuerySchema } from './championship.schema'
 import { Request } from 'express'
-import { MinimumRole } from 'src/auth/auth.decorator'
-import Role from 'src/auth/roles'
+import { Public } from 'src/auth/auth.decorator'
 
 @Controller('championships')
 export class ChampionshipsController {
   constructor(private readonly championshipsService: ChampionshipsService) {}
 
-  @MinimumRole(Role.GUEST)
+  @Public()
   @Get()
   @UsePipes(new ZodValidationPipe(getChampionshipsQuerySchema))
   async getAllChampionships(

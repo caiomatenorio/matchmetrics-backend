@@ -2,17 +2,16 @@ import { HttpStatus } from '@nestjs/common'
 import ErrorResponseBody from '../response-bodies/error-response-body'
 import ConventionalHttpException from './conventional-http.exception'
 import ErrorCode from '../response-bodies/error-code'
-import Role, { convertRoleToString } from 'src/auth/roles'
+import Role from 'src/auth/roles/role'
+import AuthenticatedRole from 'src/auth/roles/authenticated.role'
 
 export default class RoleUnauthorizedException extends ConventionalHttpException {
-  constructor(currentRole: Role.USER | Role.ADMIN, minimumRole: Role.USER | Role.ADMIN) {
+  constructor(currentRole: Role, minimumRole: AuthenticatedRole) {
     super(
       new ErrorResponseBody(
         HttpStatus.UNAUTHORIZED,
         ErrorCode.ROLE_UNAUTHORIZED,
-        `${convertRoleToString(currentRole)} role is not authorized to access this resource. Minimum required role: ${convertRoleToString(
-          minimumRole
-        )}`
+        `${currentRole.name} role is not authorized to access this resource. Minimum required role: ${minimumRole.name}`
       )
     )
   }

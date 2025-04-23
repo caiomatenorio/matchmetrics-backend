@@ -4,14 +4,13 @@ import { AuthService } from '../auth.service'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
-import { MinimumRole } from '../auth.decorator'
-import Role from '../roles'
+import { Authenticated } from '../auth.decorator'
 
 @Controller('log-out')
 export class LogOutController {
   constructor(private readonly authService: AuthService) {}
 
-  @MinimumRole(Role.USER)
+  @Authenticated()
   @Post()
   @HttpCode(HttpStatus.OK)
   async logOut(

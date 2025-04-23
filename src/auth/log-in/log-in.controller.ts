@@ -6,14 +6,13 @@ import { Response } from 'express'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
-import { MinimumRole } from '../auth.decorator'
-import Role from '../roles'
+import { Public } from '../auth.decorator'
 
 @Controller('log-in')
 export class LogInController {
   constructor(private readonly authService: AuthService) {}
 
-  @MinimumRole(Role.GUEST)
+  @Public()
   @Post()
   @UsePipes(new ZodValidationPipe(logInSchema))
   @HttpCode(HttpStatus.OK)

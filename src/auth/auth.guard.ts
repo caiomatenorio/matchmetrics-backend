@@ -3,8 +3,9 @@ import { Observable } from 'rxjs'
 import { SessionService } from './session/session.service'
 import { Reflector } from '@nestjs/core'
 import { Request, Response } from 'express'
-import Role from './roles'
 import { AUTH_KEY } from './auth.decorator'
+import Role from './roles/role'
+import AuthenticatedRole from './roles/authenticated.role'
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -15,12 +16,12 @@ export class AuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     const minimumRole = this.getMinimumRole(context)
-    if (!minimumRole) return true
+    if (this.isPublic(minimumRole)) return true
 
     const request = context.switchToHttp().getRequest<Request>()
     const response = context.switchToHttp().getResponse<Response>()
 
-    return this.sessionService.validateSession(request, response, minimumRole)
+    return this.sessionService.validateSession(request, response, minimumRole as AuthenticatedRole)
   }
 
   private getMinimumRole(context: ExecutionContext): Role {
@@ -28,5 +29,9 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ])
+  }
+
+  private isPublic(minimumRole: Role): boolean {
+    return !minimumRole.authenticated
   }
 }

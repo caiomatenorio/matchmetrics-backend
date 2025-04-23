@@ -1,4 +1,4 @@
-import { AuthenticatedRole } from '../roles'
+import AuthenticatedRole from '../roles/authenticated.role'
 
 export default interface JwtPayload {
   sub: string

@@ -4,7 +4,9 @@ import { UsersService } from 'src/users/users.service'
 import { Request, Response } from 'express'
 import { JwtService } from './jwt/jwt.service'
 import { RefreshTokenService } from './refresh-token/refresh-token.service'
-import UnauthenticatedException from 'src/common/exceptions/unauthenticated.exception'
+import RoleUnauthorizedException from 'src/common/exceptions/role-unauthorized.exception'
+import Guest from './roles/guest.role'
+import User from './roles/user.role'
 
 @Injectable()
 export class AuthService {
@@ -37,19 +39,26 @@ export class AuthService {
     return false
   }
 
-  async whoAmI(request: Request): Promise<{ id: string; email: string }> {
+  async whoAmI(request: Request): Promise<{ id: string; email: string; role: string }> {
     const { accessToken, refreshToken } = this.sessionService.getTokenHeaders(request)
 
-    if (accessToken) {
-      const { userId: id, email } = (await this.jwtService.getJwtPayload(accessToken)) ?? {}
-      if (id && email) return { id, email }
+    if (accessToken && (await this.jwtService.isJwtValid(accessToken))) {
+      const { userId: id, email, role } = (await this.jwtService.getJwtPayload(accessToken)) ?? {}
+      if (id && email && role) return { id, email, role: role.name }
     }
 
     if (refreshToken) {
       const { userId } = (await this.sessionService.getSessionByRefreshToken(refreshToken)) ?? {}
-      if (userId) return { id: userId, email: await this.usersService.getUserEmailById(userId) }
+
+      if (userId) {
+        return {
+          id: userId,
+          email: await this.usersService.getUserEmailById(userId),
+          role: (await this.usersService.getUserRoleById(userId)).name,
+        }
+      }
     }
 
-    throw new UnauthenticatedException()
+    throw new RoleUnauthorizedException(new Guest(), new User())
   }
 }

@@ -5,18 +5,17 @@ import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
 import { AuthService } from '../auth.service'
-import { MinimumRole } from '../auth.decorator'
-import Role from '../roles'
+import { Public } from '../auth.decorator'
 
 @Controller('sign-up')
 export class SignUpController {
   constructor(private readonly authService: AuthService) {}
 
-  @MinimumRole(Role.GUEST)
+  @Public()
   @Post()
   @UsePipes(new ZodValidationPipe(signUpSchema))
   @HttpCode(HttpStatus.CREATED)
-  async createAdmin(@Body() body: SignUpInput): Promise<NoDataSuccessResponseBody> {
+  async signUp(@Body() body: SignUpInput): Promise<NoDataSuccessResponseBody> {
     await this.authService.signUp(body.email, body.password)
 
     return new SuccessResponseBody(HttpStatus.CREATED, 'User created successfully')
