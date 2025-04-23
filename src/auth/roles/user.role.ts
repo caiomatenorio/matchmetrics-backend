@@ -1,7 +1,7 @@
 import { $Enums } from 'generated/prisma'
 import AuthenticatedRole from './authenticated.role'
 
-export default class User extends AuthenticatedRole {
+export default class UserRole extends AuthenticatedRole {
   readonly name = 'user'
   readonly hierarchy = 1
   readonly authenticated = true

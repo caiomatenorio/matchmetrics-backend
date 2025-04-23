@@ -5,25 +5,25 @@ import { Request, Response } from 'express'
 import { JwtService } from './jwt/jwt.service'
 import { RefreshTokenService } from './refresh-token/refresh-token.service'
 import RoleUnauthorizedException from 'src/common/exceptions/role-unauthorized.exception'
-import Guest from './roles/guest.role'
-import User from './roles/user.role'
+import GuestRole from './roles/guest.role'
+import UserRole from './roles/user.role'
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UserService,
+    private readonly userService: UserService,
     private readonly sessionService: SessionService,
     private readonly jwtService: JwtService,
     private readonly refreshTokenService: RefreshTokenService
   ) {}
 
   async signUp(email: string, password: string): Promise<void> {
-    await this.usersService.createUser(email, password)
+    await this.userService.createUser(email, password)
   }
 
   async logIn(email: string, password: string, response: Response): Promise<void> {
-    await this.usersService.validateCredentials(email, password)
-    const userId = await this.usersService.getUserIdByEmail(email)
+    await this.userService.validateCredentials(email, password)
+    const userId = await this.userService.getUserIdByEmail(email)
     await this.sessionService.createSession(response, userId)
   }
 
@@ -53,12 +53,12 @@ export class AuthService {
       if (userId) {
         return {
           id: userId,
-          email: await this.usersService.getUserEmailById(userId),
-          role: (await this.usersService.getUserRoleById(userId)).name,
+          email: await this.userService.getUserEmail(userId),
+          role: (await this.userService.getUserRole(userId)).name,
         }
       }
     }
 
-    throw new RoleUnauthorizedException(new Guest(), new User())
+    throw new RoleUnauthorizedException(new GuestRole(), new UserRole())
   }
 }

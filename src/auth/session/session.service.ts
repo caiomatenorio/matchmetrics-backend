@@ -10,9 +10,9 @@ import { Session } from 'generated/prisma'
 import RoleUnauthorizedException from 'src/common/exceptions/role-unauthorized.exception'
 import AuthenticatedRole from '../roles/authenticated.role'
 import Role from '../roles/role'
-import Guest from '../roles/guest.role'
+import GuestRole from '../roles/guest.role'
 import Ref from 'src/common/util/ref'
-import User from '../roles/user.role'
+import UserRole from '../roles/user.role'
 
 @Injectable()
 export class SessionService {
@@ -22,7 +22,7 @@ export class SessionService {
     @Inject(forwardRef(() => RefreshTokenService))
     private readonly refreshTokenService: RefreshTokenService,
 
-    private readonly usersService: UserService,
+    private readonly userService: UserService,
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService
   ) {
@@ -47,11 +47,11 @@ export class SessionService {
   }
 
   async createSession(response: Response, userId: string): Promise<void> {
-    const userExists = await this.usersService.userExists(userId)
+    const userExists = await this.userService.userExists(userId)
     if (!userExists) throw new UserDoesNotExistException()
 
-    const email = await this.usersService.getUserEmailById(userId)
-    const userRole = await this.usersService.getUserRoleById(userId)
+    const email = await this.userService.getUserEmail(userId)
+    const userRole = await this.userService.getUserRole(userId)
 
     const refreshToken = this.refreshTokenService.generateRefreshToken()
     const expiresAt = new Date(Date.now() + this.sessionExpiresInMillis)
@@ -71,7 +71,7 @@ export class SessionService {
     response: Response,
     minimumRole: AuthenticatedRole
   ): Promise<boolean> {
-    const currentUserRoleRef: Ref<Role> = new Ref(new Guest())
+    const currentUserRoleRef: Ref<Role> = new Ref(new GuestRole())
     const { accessToken, refreshToken } = this.getTokenHeaders(request)
 
     /*
@@ -117,11 +117,11 @@ export class SessionService {
       })) ?? {}
     if (!(sessionId && userId)) throw new Error('Invalid refresh token') // Generic error to quit try-catch block
 
-    currentUserRoleRef.value = await this.usersService.getUserRoleById(userId)
+    currentUserRoleRef.value = await this.userService.getUserRole(userId)
     if (currentUserRoleRef.value.hierarchy < minimumRole.hierarchy)
       throw new Error('Role unauthorized') // Generic error to quit try-catch block
 
-    const email = await this.usersService.getUserEmailById(userId)
+    const email = await this.userService.getUserEmail(userId)
     const newRefreshToken = this.refreshTokenService.generateRefreshToken()
     const expiresAt = new Date(Date.now() + this.sessionExpiresInMillis)
 
@@ -155,7 +155,7 @@ export class SessionService {
     }
 
     this.unsetTokenHeaders(response)
-    throw new RoleUnauthorizedException(new Guest(), new User())
+    throw new RoleUnauthorizedException(new GuestRole(), new UserRole())
   }
 
   @Cron(CronExpression.EVERY_HOUR)

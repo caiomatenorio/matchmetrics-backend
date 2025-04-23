@@ -5,8 +5,9 @@ import UserDoesNotExistException from 'src/common/exceptions/user-does-not-exist
 import * as bcrypt from 'bcrypt'
 import InvalidCredentialsException from 'src/common/exceptions/invalid-credentials.exception'
 import AuthenticatedRole from 'src/auth/roles/authenticated.role'
-import User from 'src/auth/roles/user.role'
-import Admin from 'src/auth/roles/admin.role'
+import UserRole from 'src/auth/roles/user.role'
+import AdminRole from 'src/auth/roles/admin.role'
+import UserAlreadyHasThisRoleException from 'src/common/exceptions/user-already-has-this-role.exception'
 
 @Injectable()
 export class UserService {
@@ -38,7 +39,7 @@ export class UserService {
     return !!user
   }
 
-  async getUserEmailById(userId: string): Promise<string> {
+  async getUserEmail(userId: string): Promise<string> {
     const { email } =
       (await this.prismaService.user.findUnique({
         where: { id: userId },
@@ -62,7 +63,7 @@ export class UserService {
     return id
   }
 
-  async getUserRoleById(userId: string): Promise<AuthenticatedRole> {
+  async getUserRole(userId: string): Promise<AuthenticatedRole> {
     const { role } =
       (await this.prismaService.user.findUnique({
         where: { id: userId },
@@ -73,9 +74,9 @@ export class UserService {
 
     switch (role) {
       case 'USER':
-        return new User()
+        return new UserRole()
       case 'ADMIN':
-        return new Admin()
+        return new AdminRole()
     }
   }
 
@@ -88,5 +89,16 @@ export class UserService {
     if (admin && (await bcrypt.compare(password, admin.password))) return
 
     throw new InvalidCredentialsException()
+  }
+
+  async updateUserRole(userId: string, role: AuthenticatedRole): Promise<void> {
+    const currentRole = await this.getUserRole(userId)
+
+    if (currentRole.equals(role)) throw new UserAlreadyHasThisRoleException(role)
+
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { role: role.toPrismaRole() },
+    })
   }
 }
