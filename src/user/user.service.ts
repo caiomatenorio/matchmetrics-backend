@@ -9,7 +9,7 @@ import User from 'src/auth/roles/user.role'
 import Admin from 'src/auth/roles/admin.role'
 
 @Injectable()
-export class UsersService {
+export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async createUser(email: string, password: string): Promise<void> {

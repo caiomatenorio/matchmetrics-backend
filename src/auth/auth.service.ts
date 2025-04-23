@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { SessionService } from './session/session.service'
-import { UsersService } from 'src/users/users.service'
+import { UserService } from 'src/user/user.service'
 import { Request, Response } from 'express'
 import { JwtService } from './jwt/jwt.service'
 import { RefreshTokenService } from './refresh-token/refresh-token.service'
@@ -11,7 +11,7 @@ import User from './roles/user.role'
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
+    private readonly usersService: UserService,
     private readonly sessionService: SessionService,
     private readonly jwtService: JwtService,
     private readonly refreshTokenService: RefreshTokenService

@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import UserDoesNotExistException from 'src/common/exceptions/user-does-not-exist.exception'
-import { UsersService } from 'src/users/users.service'
+import { UserService } from 'src/user/user.service'
 import { RefreshTokenService } from '../refresh-token/refresh-token.service'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { JwtService } from '../jwt/jwt.service'
@@ -22,7 +22,7 @@ export class SessionService {
     @Inject(forwardRef(() => RefreshTokenService))
     private readonly refreshTokenService: RefreshTokenService,
 
-    private readonly usersService: UsersService,
+    private readonly usersService: UserService,
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService
   ) {
