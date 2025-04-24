@@ -5,6 +5,8 @@ import { UserModule } from './user/user.module'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ChampionshipsModule } from './championships/championships.module'
 import { AdminModule } from './admin/admin.module'
+import { ConfigModule } from '@nestjs/config'
+import { EnvModule } from './env/env.module'
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { AdminModule } from './admin/admin.module'
     ScheduleModule.forRoot(),
     ChampionshipsModule,
     AdminModule,
+    EnvModule,
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env'] }),
   ],
 })
 export class AppModule {}

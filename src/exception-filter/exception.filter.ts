@@ -28,7 +28,6 @@ export default class ExceptionFilter implements NestExceptionFilter {
     } else {
       errorCode = ErrorCode.UNKNOWN
       message = 'An unknown error occurred'
-      console.error(exception)
     }
 
     response.status(status).json(new ErrorResponseBody(status, errorCode, message))

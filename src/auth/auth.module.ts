@@ -11,13 +11,17 @@ import { LogInController } from './log-in/log-in.controller'
 import { LogOutController } from './log-out/log-out.controller'
 import { WhoamiController } from './whoami/whoami.controller'
 import { StatusController } from './status/status.controller'
+import { EnvService } from 'src/env/env.service'
 
 @Module({
   imports: [
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: false,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '5m' },
+      inject: [EnvService],
+      useFactory: (envService: EnvService) => ({
+        secret: envService.jwtSecret,
+        signOptions: { expiresIn: '5m' },
+      }),
     }),
     PrismaModule,
     UserModule,

@@ -1,7 +1,7 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import AdminRole from 'src/auth/roles/admin.role'
 import RootCredentialsConflictError from 'src/common/errors/root-credentials-conflict.error'
-import RootCredentialsNotDefinedError from 'src/common/errors/root-credentials-not-defined.error'
+import { EnvService } from 'src/env/env.service'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { UserService } from 'src/user/user.service'
 
@@ -9,7 +9,8 @@ import { UserService } from 'src/user/user.service'
 export class AdminService implements OnApplicationBootstrap {
   constructor(
     private readonly userService: UserService,
-    private readonly prismaService: PrismaService
+    private readonly prismaService: PrismaService,
+    private readonly envService: EnvService
   ) {}
 
   async onApplicationBootstrap() {
@@ -23,12 +24,8 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async createRoot(): Promise<void> {
-    const email = process.env.ROOT_EMAIL
-    const password = process.env.ROOT_PASSWORD
-
-    if (!(email && password)) {
-      throw new RootCredentialsNotDefinedError()
-    }
+    const email = this.envService.rootEmail
+    const password = this.envService.rootPassword
 
     try {
       await this.userService.createUser(email, password, new AdminRole())
