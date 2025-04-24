@@ -13,12 +13,22 @@ import UserAlreadyHasThisRoleException from 'src/common/exceptions/user-already-
 export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createUser(email: string, password: string): Promise<void> {
+  async createUser(
+    email: string,
+    password: string,
+    role: AuthenticatedRole = new UserRole()
+  ): Promise<void> {
     const isEmailInUse = await this.isEmailInUse(email)
     if (isEmailInUse) throw new EmailAlreadyInUseException(email)
 
     const hashedPassword = await bcrypt.hash(password, 10)
-    await this.prismaService.user.create({ data: { email, password: hashedPassword } })
+    await this.prismaService.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        role: role.toPrismaRole(),
+      },
+    })
   }
 
   async isEmailInUse(email: string): Promise<boolean> {
