@@ -17,7 +17,7 @@ export class AdminController {
   async promoteUser(
     @Param(new ZodValidationPipe(promoteUserParamsSchema)) params: PromoteUserParams
   ): Promise<NoDataSuccessResponseBody> {
-    await this.adminService.promoteUser(params.email)
+    await this.adminService.promoteToAdmin(params.email)
 
     return new SuccessResponseBody(HttpStatus.OK, 'User promoted successfully')
   }

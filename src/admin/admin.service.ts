@@ -34,8 +34,8 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  async promoteUser(email: string): Promise<void> {
-    const userId = await this.userService.getUserIdByEmail(email)
+  async promoteToAdmin(userEmail: string): Promise<void> {
+    const userId = await this.userService.getUserIdByEmail(userEmail)
     await this.userService.updateUserRole(userId, new AdminRole())
   }
 }
