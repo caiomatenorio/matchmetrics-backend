@@ -5,6 +5,7 @@ import { Championship } from 'generated/prisma'
 import { AuthService } from 'src/auth/auth.service'
 import { Request } from 'express'
 import ParameterRequiresAuthException from 'src/common/exceptions/parameter-requires-auth.exception'
+import ChampionshipNotFoundException from 'src/common/exceptions/championship-not-found.exception'
 
 @Injectable()
 export class ChampionshipsService {
@@ -80,5 +81,13 @@ export class ChampionshipsService {
             return true
         }
       })
+  }
+
+  async getChampionshipBySlug(slug: string): Promise<Championship> {
+    const championship = await this.prismaService.championship.findUnique({ where: { slug } })
+
+    if (!championship) throw new ChampionshipNotFoundException()
+
+    return championship
   }
 }

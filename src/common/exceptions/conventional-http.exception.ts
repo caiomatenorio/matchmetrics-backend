@@ -1,5 +1,5 @@
 import { HttpStatus } from '@nestjs/common'
-import ErrorCode from '../response-bodies/error-code'
+import ErrorCode from '../util/error-code'
 
 export default class ConventionalHttpException extends Error {
   constructor(

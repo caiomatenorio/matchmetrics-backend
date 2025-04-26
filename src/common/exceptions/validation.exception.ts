@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common'
 import ConventionalHttpException from './conventional-http.exception'
-import ErrorCode from '../response-bodies/error-code'
+import ErrorCode from '../util/error-code'
 import { ZodError } from 'zod'
 
 export default class ValidationException extends ConventionalHttpException {

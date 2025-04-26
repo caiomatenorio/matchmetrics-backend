@@ -9,3 +9,9 @@ export const getChampionshipsQuerySchema = z.object({
 })
 
 export type GetChampionshipsQuery = z.infer<typeof getChampionshipsQuerySchema>
+
+export const getChampionshipBySlugParamsSchema = z.object({
+  slug: z.string(),
+})
+
+export type GetChampionshipBySlugParams = z.infer<typeof getChampionshipBySlugParamsSchema>

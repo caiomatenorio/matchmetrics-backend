@@ -8,7 +8,7 @@ import { Response } from 'express'
 import ConventionalError from 'src/common/errors/conventional.error'
 import ConventionalHttpException from 'src/common/exceptions/conventional-http.exception'
 import ErrorResponseBody from 'src/common/response-bodies/error-response-body'
-import ErrorCode from '../common/response-bodies/error-code'
+import ErrorCode from '../common/util/error-code'
 
 @Catch()
 export default class ExceptionFilter implements NestExceptionFilter {
