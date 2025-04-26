@@ -6,6 +6,7 @@ import { AuthService } from 'src/auth/auth.service'
 import { Request } from 'express'
 import ParameterRequiresAuthException from 'src/common/exceptions/parameter-requires-auth.exception'
 import ChampionshipNotFoundException from 'src/common/exceptions/championship-not-found.exception'
+import ChampionshipAlreadyExistsException from 'src/common/exceptions/championship-already-exists.exception'
 
 @Injectable()
 export class ChampionshipsService {
@@ -89,5 +90,37 @@ export class ChampionshipsService {
     if (!championship) throw new ChampionshipNotFoundException()
 
     return championship
+  }
+
+  async championshipExists(slug: string): Promise<boolean> {
+    try {
+      await this.getChampionshipBySlug(slug)
+      return true
+    } catch (error) {
+      if (error instanceof ChampionshipNotFoundException) return false
+      throw error
+    }
+  }
+
+  async createChampionship(
+    name: string,
+    slug: string,
+    season: string,
+    start: Date,
+    end?: Date,
+    countrySlug?: string
+  ): Promise<void> {
+    if (await this.championshipExists(slug)) throw new ChampionshipAlreadyExistsException()
+
+    await this.prismaService.championship.create({
+      data: {
+        name,
+        slug,
+        season,
+        start,
+        end,
+        country: countrySlug ? { connect: { slug: countrySlug } } : undefined, // Connect to country if provided
+      },
+    })
   }
 }

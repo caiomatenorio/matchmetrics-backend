@@ -1,16 +1,31 @@
-import { Controller, Get, HttpCode, HttpStatus, Param, Query, Req, UsePipes } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  Req,
+  UsePipes,
+} from '@nestjs/common'
 import { ChampionshipsService } from './championships.service'
-import SuccessResponseBody from 'src/common/response-bodies/success-response-body'
+import SuccessResponseBody, {
+  NoDataSuccessResponseBody,
+} from 'src/common/response-bodies/success-response-body'
 import { Championship } from 'generated/prisma'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import {
+  CreateChampionshipBody,
+  createChampionshipSchema,
   GetChampionshipBySlugParams,
   getChampionshipBySlugParamsSchema,
   GetChampionshipsQuery,
   getChampionshipsQuerySchema,
 } from './championship.schema'
 import { Request } from 'express'
-import { Public } from 'src/auth/auth.decorator'
+import { AdminOnly, Public } from 'src/auth/auth.decorator'
 
 @Controller('championships')
 export class ChampionshipsController {
@@ -45,5 +60,18 @@ export class ChampionshipsController {
     const championship = await this.championshipsService.getChampionshipBySlug(params.slug)
 
     return new SuccessResponseBody(HttpStatus.OK, 'Championship fetched successfully', championship)
+  }
+
+  @AdminOnly()
+  @Post()
+  @UsePipes(new ZodValidationPipe(createChampionshipSchema))
+  @HttpCode(HttpStatus.CREATED)
+  async createChampionship(
+    @Body() body: CreateChampionshipBody
+  ): Promise<NoDataSuccessResponseBody> {
+    const { name, slug, season, start, end, countrySlug } = body
+    await this.championshipsService.createChampionship(name, slug, season, start, end, countrySlug)
+
+    return new SuccessResponseBody(HttpStatus.CREATED, 'Championship created successfully')
   }
 }
