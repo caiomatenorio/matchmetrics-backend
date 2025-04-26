@@ -38,9 +38,7 @@ export class ChampionshipsController {
   async getAllChampionships(
     @Req() request: Request,
     @Query() query: GetChampionshipsQuery
-  ): Promise<
-    SuccessResponseBody<(Omit<Championship, 'start' | 'end'> & { favorited: boolean })[]>
-  > {
+  ): Promise<SuccessResponseBody<(Championship & { favorited: boolean })[]>> {
     const championships = await this.championshipsService.getAllChampionships(request, query)
 
     return new SuccessResponseBody(
@@ -69,8 +67,8 @@ export class ChampionshipsController {
   async createChampionship(
     @Body() body: CreateChampionshipBody
   ): Promise<NoDataSuccessResponseBody> {
-    const { name, slug, season, start, end, countrySlug } = body
-    await this.championshipsService.createChampionship(name, slug, season, start, end, countrySlug)
+    const { name, slug, season, countrySlug } = body
+    await this.championshipsService.createChampionship(name, slug, season, countrySlug)
 
     return new SuccessResponseBody(HttpStatus.CREATED, 'Championship created successfully')
   }

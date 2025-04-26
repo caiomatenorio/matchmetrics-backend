@@ -34,13 +34,11 @@ model Session {
 }
 
 model Championship {
-    id                 String    @id @default(cuid())
+    id                 String   @id @default(cuid())
     name               String
-    slug               String    @unique
+    slug               String   @unique
     season             String
-    start              DateTime
-    end                DateTime?
-    country            Country?  @relation(fields: [countrySlug], references: [slug], onDelete: NoAction)
+    country            Country? @relation(fields: [countrySlug], references: [slug], onDelete: NoAction)
     countrySlug        String?
     teams              Team[]
     usersThatFavorited User[]

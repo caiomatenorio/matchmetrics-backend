@@ -15,30 +15,16 @@ export class ChampionshipsService {
     private readonly authService: AuthService
   ) {}
 
-  private convertYearQueryToDate(year?: number): { startDate: Date; endDate: Date } {
-    const startDate = new Date(year ?? 0, 0)
-    const endDate = new Date(year ? year + 1 : 2100, 0)
-
-    return { startDate, endDate }
-  }
-
   async getAllChampionships(
     request: Request,
     query: GetChampionshipsQuery
-  ): Promise<(Omit<Championship, 'start' | 'end'> & { favorited: boolean })[]> {
+  ): Promise<(Championship & { favorited: boolean })[]> {
     const { search, year, country, favorited, page } = query
-    const { startDate, endDate } = this.convertYearQueryToDate(year)
 
-    const championships = await this.prismaService.championship.findMany({
+    let championships = await this.prismaService.championship.findMany({
       where: {
         name: { contains: search, mode: 'insensitive' }, // Case insensitive search by name
-        AND: [{ start: { gte: startDate } }, { end: { lt: endDate } }], // Filter by year
         country: country ? { slug: country } : undefined, // Filter by country slug
-      },
-
-      omit: {
-        start: true, // Omit start date
-        end: true, // Omit end date
       },
 
       // Include ids of users that favorited the championship
@@ -48,8 +34,21 @@ export class ChampionshipsService {
       take: page ? 10 : undefined,
       skip: page ? (page - 1) * 10 : undefined,
 
-      orderBy: { start: 'desc' }, // Order by start date in descending order
+      orderBy: { name: 'asc' }, // Order by start date in descending order
     })
+
+    if (year) {
+      championships = championships.filter(championship => {
+        try {
+          const seasonStart = championship.season.split('-')[0] // Get the first part of the season (YYYY)
+          const seasonEnd = championship.season.split('-')[1] ?? championship.season.split('-')[0] // Get the second part of the season (YYYY) or use the first part if it doesn't exist
+
+          return year >= parseInt(seasonStart) && year <= parseInt(seasonEnd)
+        } catch {
+          return false // If the season is not in the expected format, exclude it
+        }
+      })
+    }
 
     const isAuthenticated = await this.authService.getAuthStatus(request)
 
@@ -106,8 +105,6 @@ export class ChampionshipsService {
     name: string,
     slug: string,
     season: string,
-    start: Date,
-    end?: Date,
     countrySlug?: string
   ): Promise<void> {
     if (await this.championshipExists(slug)) throw new ChampionshipAlreadyExistsException()
@@ -117,8 +114,6 @@ export class ChampionshipsService {
         name,
         slug,
         season,
-        start,
-        end,
         country: countrySlug ? { connect: { slug: countrySlug } } : undefined, // Connect to country if provided
       },
     })
