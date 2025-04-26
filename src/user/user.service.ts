@@ -69,9 +69,9 @@ export class UserService {
     return email
   }
 
-  async getUserIdByEmail(email: string): Promise<string> {
+  async getUserIdByEmail(email: string, tpc?: TransactionablePrismaClient): Promise<string> {
     const { id } =
-      (await this.prismaService.user.findUnique({
+      (await this.prismaService.checkTransaction(tpc).user.findUnique({
         where: { email },
         select: { id: true },
       })) ?? {}
@@ -81,9 +81,9 @@ export class UserService {
     return id
   }
 
-  async getUserRole(userId: string): Promise<AuthenticatedRole> {
+  async getUserRole(userId: string, tpc?: TransactionablePrismaClient): Promise<AuthenticatedRole> {
     const { role } =
-      (await this.prismaService.user.findUnique({
+      (await this.prismaService.checkTransaction(tpc).user.findUnique({
         where: { id: userId },
         select: { role: true },
       })) ?? {}
@@ -109,12 +109,16 @@ export class UserService {
     throw new InvalidCredentialsException()
   }
 
-  async updateUserRole(userId: string, role: AuthenticatedRole): Promise<void> {
-    const currentRole = await this.getUserRole(userId)
+  async updateUserRole(
+    userId: string,
+    role: AuthenticatedRole,
+    tpc?: TransactionablePrismaClient
+  ): Promise<void> {
+    const currentRole = await this.getUserRole(userId, tpc)
 
     if (currentRole.equals(role)) throw new UserAlreadyHasThisRoleException(role)
 
-    await this.prismaService.user.update({
+    await this.prismaService.checkTransaction(tpc).user.update({
       where: { id: userId },
       data: { role: role.toPrismaRole() },
     })

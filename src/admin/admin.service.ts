@@ -42,7 +42,9 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async promoteToAdmin(userEmail: string): Promise<void> {
-    const userId = await this.userService.getUserIdByEmail(userEmail)
-    await this.userService.updateUserRole(userId, new AdminRole())
+    await this.prismaService.$transaction(async tpc => {
+      const userId = await this.userService.getUserIdByEmail(userEmail, tpc)
+      await this.userService.updateUserRole(userId, new AdminRole(), tpc)
+    })
   }
 }
