@@ -191,13 +191,11 @@ export class UserService {
    * @throws {InvalidCredentialsException} if the credentials are invalid
    */
   async deleteMe(request: Request, response: Response, password: string): Promise<void> {
-    await Promise.all([
-      this.prismaService.$transaction(async tpc => {
-        const { id, email } = await this.authService.whoAmI(request, tpc)
-        await this.validateCredentials(email, password)
-        await this.prismaService.checkTransaction(tpc).user.delete({ where: { id } })
-      }),
-      this.authService.logOut(request, response),
-    ])
+    await this.prismaService.$transaction(async tpc => {
+      const { id, email } = await this.authService.whoAmI(request, tpc)
+      await this.validateCredentials(email, password, tpc)
+      await this.authService.logOut(request, response)
+      await this.prismaService.checkTransaction(tpc).user.delete({ where: { id } })
+    })
   }
 }
