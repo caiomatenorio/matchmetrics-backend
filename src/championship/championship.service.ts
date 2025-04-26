@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/prisma/prisma.service'
-import { GetChampionshipsQuery } from './championship.schema'
-import { Championship, Team } from 'generated/prisma'
+import { GetChampionshipMatchesQuery, GetChampionshipsQuery } from './championship.schema'
+import { Championship, Match, Team } from 'generated/prisma'
 import { AuthService } from 'src/auth/auth.service'
 import { Request } from 'express'
 import ParameterRequiresAuthException from 'src/common/exceptions/parameter-requires-auth.exception'
@@ -208,5 +208,43 @@ export class ChampionshipService {
     if (!teams) throw new ChampionshipNotFoundException()
 
     return teams
+  }
+
+  async getChampionshipMatches(
+    championshipSlug: string,
+    query: GetChampionshipMatchesQuery
+  ): Promise<Match[]> {
+    const { search, minDate, maxDate } = query
+
+    const { matches } =
+      (await this.prismaService.championship.findUnique({
+        where: { slug: championshipSlug }, // Find championship by slug
+
+        select: {
+          matches:
+            search || minDate || maxDate
+              ? // If a filter is provided, apply it to the matches
+                {
+                  where: {
+                    OR: [
+                      { homeTeam: { name: { contains: search } } }, // Search by home team name
+                      { awayTeam: { name: { contains: search } } }, // Search by away team name
+                    ],
+
+                    date: {
+                      gte: minDate, // Filter by minimum date
+                      lte: maxDate, // Filter by maximum date
+                    },
+                  },
+                }
+              : // Otherwise, select all matches
+                true,
+        },
+      })) ?? {}
+
+    if (!matches) throw new ChampionshipNotFoundException()
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return matches
   }
 }

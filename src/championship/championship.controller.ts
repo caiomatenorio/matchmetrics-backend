@@ -21,6 +21,10 @@ import {
   createChampionshipSchema,
   GetChampionshipBySlugParams,
   getChampionshipBySlugParamsSchema,
+  GetChampionshipMatchesParams,
+  getChampionshipMatchesParamsSchema,
+  GetChampionshipMatchesQuery,
+  getChampionshipMatchesQuerySchema,
   GetChampionshipsQuery,
   getChampionshipsQuerySchema,
   GetChampionshipTeamsParams,
@@ -77,7 +81,19 @@ export class ChampionshipController {
     return new SuccessResponseBody(HttpStatus.OK, 'Teams fetched successfully', teams)
   }
 
-  // async getChampionshipMatches()
+  @Public()
+  @Get('/:slug/matches')
+  @HttpCode(HttpStatus.OK)
+  async getChampionshipMatches(
+    @Param(new ZodValidationPipe(getChampionshipMatchesParamsSchema))
+    params: GetChampionshipMatchesParams,
+    @Query(new ZodValidationPipe(getChampionshipMatchesQuerySchema))
+    query: GetChampionshipMatchesQuery
+  ) {
+    const matches = await this.championshipsService.getChampionshipMatches(params.slug, query)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Matches fetched successfully', matches)
+  }
 
   @AdminOnly()
   @Post()

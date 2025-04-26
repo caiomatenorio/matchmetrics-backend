@@ -42,7 +42,7 @@ model Championship {
     countrySlug        String?
     teams              Team[]
     usersThatFavorited User[]
-    Match              Match[]
+    matches            Match[]
 }
 
 model Country {
