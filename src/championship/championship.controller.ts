@@ -10,7 +10,7 @@ import {
   Req,
   UsePipes,
 } from '@nestjs/common'
-import { ChampionshipsService } from './championships.service'
+import { ChampionshipService } from './championship.service'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
@@ -28,8 +28,8 @@ import { Request } from 'express'
 import { AdminOnly, Public } from 'src/auth/auth.decorator'
 
 @Controller('championships')
-export class ChampionshipsController {
-  constructor(private readonly championshipsService: ChampionshipsService) {}
+export class ChampionshipController {
+  constructor(private readonly championshipsService: ChampionshipService) {}
 
   @Public()
   @Get()

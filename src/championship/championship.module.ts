@@ -5,4 +5,4 @@ import { PrismaModule } from 'src/prisma/prisma.module'
 @Module({
   imports: [PrismaModule, AuthModule],
 })
-export class ChampionshipsModule {}
+export class ChampionshipModule {}

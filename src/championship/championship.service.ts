@@ -9,7 +9,7 @@ import ChampionshipNotFoundException from 'src/common/exceptions/championship-no
 import ChampionshipAlreadyExistsException from 'src/common/exceptions/championship-already-exists.exception'
 
 @Injectable()
-export class ChampionshipsService {
+export class ChampionshipService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly authService: AuthService
