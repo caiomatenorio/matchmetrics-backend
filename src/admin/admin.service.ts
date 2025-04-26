@@ -18,6 +18,11 @@ export class AdminService implements OnApplicationBootstrap {
     await this.createRoot()
   }
 
+  /**
+   * Check if an admin user exists
+   * @param tpc - TransactionablePrismaClient for transaction management, optional
+   * @returns true if an admin user exists, false otherwise
+   */
   async adminExists(tpc?: TransactionablePrismaClient): Promise<boolean> {
     const exists = await this.prismaService
       .checkTransaction(tpc)
@@ -26,6 +31,10 @@ export class AdminService implements OnApplicationBootstrap {
     return !!exists
   }
 
+  /**
+   * Create a root user if it doesn't exist
+   * @throws {RootCredentialsConflictError} if the root credentials are already in use
+   */
   async createRoot(): Promise<void> {
     await this.prismaService.$transaction(async tpc => {
       if (await this.adminExists(tpc)) return
@@ -41,6 +50,10 @@ export class AdminService implements OnApplicationBootstrap {
     })
   }
 
+  /**
+   * Promote a user to admin
+   * @param userEmail - The email of the user to promote
+   */
   async promoteToAdmin(userEmail: string): Promise<void> {
     await this.prismaService.$transaction(async tpc => {
       const userId = await this.userService.getUserIdByEmail(userEmail, tpc)

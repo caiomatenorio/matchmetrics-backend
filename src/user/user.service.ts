@@ -22,7 +22,7 @@ export class UserService {
   async createUser(
     email: string,
     password: string,
-    role: AuthenticatedRole = new UserRole(),
+    role: AuthenticatedRole,
     tpc?: TransactionablePrismaClient
   ): Promise<void> {
     const isEmailInUse = await this.isEmailInUse(email, tpc)
@@ -48,8 +48,8 @@ export class UserService {
     return !!admin
   }
 
-  async userExists(userId: string): Promise<boolean> {
-    const user = await this.prismaService.user.findUnique({
+  async userExists(userId: string, tpc?: TransactionablePrismaClient): Promise<boolean> {
+    const user = await this.prismaService.checkTransaction(tpc).user.findUnique({
       where: { id: userId },
       select: { id: true },
     })
@@ -57,9 +57,9 @@ export class UserService {
     return !!user
   }
 
-  async getUserEmail(userId: string): Promise<string> {
+  async getUserEmail(userId: string, tpc?: TransactionablePrismaClient): Promise<string> {
     const { email } =
-      (await this.prismaService.user.findUnique({
+      (await this.prismaService.checkTransaction(tpc).user.findUnique({
         where: { id: userId },
         select: { email: true },
       })) ?? {}
@@ -98,8 +98,12 @@ export class UserService {
     }
   }
 
-  async validateCredentials(email: string, password: string): Promise<void> {
-    const admin = await this.prismaService.user.findUnique({
+  async validateCredentials(
+    email: string,
+    password: string,
+    tpc?: TransactionablePrismaClient
+  ): Promise<void> {
+    const admin = await this.prismaService.checkTransaction(tpc).user.findUnique({
       where: { email },
       select: { password: true },
     })
