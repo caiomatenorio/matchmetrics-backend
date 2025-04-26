@@ -7,18 +7,99 @@ import { Request } from 'express'
 import ParameterRequiresAuthException from 'src/common/exceptions/parameter-requires-auth.exception'
 import ChampionshipNotFoundException from 'src/common/exceptions/championship-not-found.exception'
 import ChampionshipAlreadyExistsException from 'src/common/exceptions/championship-already-exists.exception'
+import { CountryService } from 'src/country/country.service'
+import CountryNotFoundException from 'src/common/exceptions/country-not-found.exception'
+import TransactionPrismaClient from 'src/common/util/transaction-prisma-client'
+
+type ChampionshipWithUsersThatFavorited = Championship & { usersThatFavorited: { id: string }[] }
+type ChampionshipWithFavoritedStatus = Championship & { favorited: boolean }
 
 @Injectable()
 export class ChampionshipService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly countryService: CountryService
   ) {}
 
+  /**
+   * Filter championships by year. The year must be between the start and end of the season.
+   * @param championships - Array of championships to filter
+   * @param year - Year to filter by
+   * @returns championships that match the year
+   */
+  private filterChampionshipsByYear(
+    championships: ChampionshipWithUsersThatFavorited[],
+    year: number
+  ): ChampionshipWithUsersThatFavorited[] {
+    return championships.filter(championship => {
+      try {
+        const seasonStart = championship.season.split('-')[0] // Get the first part of the season (YYYY)
+        const seasonEnd = championship.season.split('-')[1] ?? championship.season.split('-')[0] // Get the second part of the season (YYYY) or use the first part if it doesn't exist
+
+        return year >= parseInt(seasonStart) && year <= parseInt(seasonEnd)
+      } catch {
+        return false // If the season is not in the expected format, exclude it
+      }
+    })
+  }
+
+  /**
+   * Attach the favorited status to various championships and remove the usersThatFavorited field.
+   * If the userId is not provided, all championships will have favorited set to false.
+   * @param championships - Array of championships to attach the favorited status to
+   * @param userId - ID of the user to check if they favorited the championship
+   * @returns championships with the favorited status attached
+   */
+  private attachFavoritedStatusToChampionships(
+    championships: ChampionshipWithUsersThatFavorited[],
+    userId?: string
+  ): ChampionshipWithFavoritedStatus[] {
+    return championships.map(championship => ({
+      ...championship,
+      favorited: userId ? championship.usersThatFavorited.some(user => user.id === userId) : false,
+    }))
+  }
+
+  /**
+   * Filter championships by their favorited status.
+   * @param championships - Array of championships to filter
+   * @param favorited - 'true' to get only favorited championships, 'false' to get only non-favorited championships, undefined to get all championships
+   * @returns championships that match the favorited status
+   */
+  private filterChampionshipsByFavoritedStatus(
+    championships: ChampionshipWithFavoritedStatus[],
+    favorited?: 'true' | 'false'
+  ): ChampionshipWithFavoritedStatus[] {
+    return championships.filter(championship => {
+      switch (favorited) {
+        case 'true':
+          return championship.favorited
+        case 'false':
+          return !championship.favorited
+        default:
+          return true
+      }
+    })
+  }
+
+  /**
+   * Get all championships with optional filters for year, country, and favorited status. Also
+   * supports searching by name and pagination.
+   * @param request - Express request object for authentication
+   * @param query - Query parameters for filtering and pagination
+   * @param query.search - Search term for championship name
+   * @param query.year - Year to filter championships by
+   * @param query.country - Country slug to filter championships by
+   * @param query.favorited - 'true' to get only favorited championships, 'false' to get only non-favorited championships
+   * @param query.page - Page number for pagination
+   * @returns Array of championships with optional favorited status
+   * @throws ParameterRequiresAuthException if the favorited parameter is used without authentication
+   */
   async getAllChampionships(
     request: Request,
     query: GetChampionshipsQuery
-  ): Promise<(Championship & { favorited: boolean })[]> {
+  ): Promise<ChampionshipWithFavoritedStatus[]> {
     const { search, year, country, favorited, page } = query
 
     let championships = await this.prismaService.championship.findMany({
@@ -28,7 +109,7 @@ export class ChampionshipService {
       },
 
       // Include ids of users that favorited the championship
-      include: { usersThatFavorited: { omit: { createdAt: true, email: true, password: true } } },
+      include: { usersThatFavorited: { select: { id: true } } },
 
       // Pagination
       take: page ? 10 : undefined,
@@ -37,52 +118,28 @@ export class ChampionshipService {
       orderBy: { name: 'asc' }, // Order by start date in descending order
     })
 
-    if (year) {
-      championships = championships.filter(championship => {
-        try {
-          const seasonStart = championship.season.split('-')[0] // Get the first part of the season (YYYY)
-          const seasonEnd = championship.season.split('-')[1] ?? championship.season.split('-')[0] // Get the second part of the season (YYYY) or use the first part if it doesn't exist
-
-          return year >= parseInt(seasonStart) && year <= parseInt(seasonEnd)
-        } catch {
-          return false // If the season is not in the expected format, exclude it
-        }
-      })
-    }
+    if (year) championships = this.filterChampionshipsByYear(championships, year)
 
     const isAuthenticated = await this.authService.getAuthStatus(request)
 
     if (!isAuthenticated) {
       if (favorited) throw new ParameterRequiresAuthException('favorited')
-
-      return championships.map(championship => ({
-        ...championship,
-        usersThatFavorited: undefined,
-        favorited: false,
-      }))
+      return this.attachFavoritedStatusToChampionships(championships)
     }
 
     const { id: userId } = await this.authService.whoAmI(request)
 
-    return championships
-      .map(championship => ({
-        ...championship,
-        usersThatFavorited: undefined,
-        favorited: championship.usersThatFavorited.some(user => user.id === userId),
-      }))
-      .filter(championship => {
-        // Filter by favorited status
-        switch (favorited) {
-          case 'true':
-            return championship.favorited
-          case 'false':
-            return !championship.favorited
-          default:
-            return true
-        }
-      })
+    return this.filterChampionshipsByFavoritedStatus(
+      this.attachFavoritedStatusToChampionships(championships, userId)
+    )
   }
 
+  /**
+   * Get a championship by its slug.
+   * @param slug - Slug of the championship
+   * @returns The championship object
+   * @throws ChampionshipNotFoundException if the championship does not exist
+   */
   async getChampionshipBySlug(slug: string): Promise<Championship> {
     const championship = await this.prismaService.championship.findUnique({ where: { slug } })
 
@@ -91,31 +148,49 @@ export class ChampionshipService {
     return championship
   }
 
-  async championshipExists(slug: string): Promise<boolean> {
-    try {
-      await this.getChampionshipBySlug(slug)
-      return true
-    } catch (error) {
-      if (error instanceof ChampionshipNotFoundException) return false
-      throw error
-    }
+  /**
+   * Check if a championship exists by its slug. Must be used inside a transaction.
+   * @param slug - Slug of the championship
+   * @param prisma - Prisma client instance inside a transaction
+   * @returns true if the championship exists, false otherwise
+   */
+  private async championshipExistsT(
+    slug: string,
+    prisma: TransactionPrismaClient
+  ): Promise<boolean> {
+    return !!(await prisma.championship.findUnique({ where: { slug } }))
   }
 
+  /**
+   * Create a new championship. If a country slug is provided, it will connect the championship to the country.
+   * @param name - Name of the championship
+   * @param slug - Slug of the championship, must be unique
+   * @param season - Season of the championship (e.g., '2023-2024' or '2023')
+   * @param countrySlug - Slug of the country to connect the championship to (optional)
+   * @throws ChampionshipAlreadyExistsException if the championship already exists
+   * @throws CountryNotFoundException if the country slug is provided but the country does not exist
+   */
   async createChampionship(
     name: string,
     slug: string,
     season: string,
     countrySlug?: string
   ): Promise<void> {
-    if (await this.championshipExists(slug)) throw new ChampionshipAlreadyExistsException()
+    await this.prismaService.$transaction(async prisma => {
+      if (await this.championshipExistsT(slug, prisma))
+        throw new ChampionshipAlreadyExistsException()
 
-    await this.prismaService.championship.create({
-      data: {
-        name,
-        slug,
-        season,
-        country: countrySlug ? { connect: { slug: countrySlug } } : undefined, // Connect to country if provided
-      },
+      if (countrySlug && !(await this.countryService.countryExistsT(countrySlug, prisma)))
+        throw new CountryNotFoundException()
+
+      await prisma.championship.create({
+        data: {
+          name,
+          slug,
+          season,
+          country: countrySlug ? { connect: { slug: countrySlug } } : undefined, // Connect to country if provided
+        },
+      })
     })
   }
 }
