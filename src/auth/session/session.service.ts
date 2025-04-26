@@ -128,7 +128,7 @@ export class SessionService {
     await this.prismaService.session.update({
       where: { id: sessionId },
       data: { refreshToken: newRefreshToken, expiresAt },
-      select: {},
+      select: { id: true },
     })
 
     const newAccessToken = await this.jwtService.generateJwt(

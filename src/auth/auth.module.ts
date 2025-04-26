@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { SessionService } from './session/session.service'
 import { RefreshTokenService } from './refresh-token/refresh-token.service'
@@ -24,7 +24,7 @@ import { EnvService } from 'src/env/env.service'
       }),
     }),
     PrismaModule,
-    UserModule,
+    forwardRef(() => UserModule),
   ],
   providers: [AuthService, SessionService, RefreshTokenService, JwtService],
   controllers: [
@@ -34,5 +34,6 @@ import { EnvService } from 'src/env/env.service'
     WhoamiController,
     StatusController,
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}

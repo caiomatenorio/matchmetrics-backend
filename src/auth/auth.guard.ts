@@ -16,12 +16,12 @@ export class AuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     const minimumRole = this.getMinimumRole(context)
-    if (this.isPublic(minimumRole)) return true
+    if (!(minimumRole instanceof AuthenticatedRole)) return true
 
     const request = context.switchToHttp().getRequest<Request>()
     const response = context.switchToHttp().getResponse<Response>()
 
-    return this.sessionService.validateSession(request, response, minimumRole as AuthenticatedRole)
+    return this.sessionService.validateSession(request, response, minimumRole)
   }
 
   private getMinimumRole(context: ExecutionContext): Role {
@@ -29,9 +29,5 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ])
-  }
-
-  private isPublic(minimumRole: Role): boolean {
-    return !minimumRole.authenticated
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import EmailAlreadyInUseException from 'src/common/exceptions/email-already-in-use.exception'
 import { PrismaService } from 'src/prisma/prisma.service'
 import UserDoesNotExistException from 'src/common/exceptions/user-does-not-exist.exception'
@@ -8,10 +8,15 @@ import AuthenticatedRole from 'src/auth/roles/authenticated.role'
 import UserRole from 'src/auth/roles/user.role'
 import AdminRole from 'src/auth/roles/admin.role'
 import UserAlreadyHasThisRoleException from 'src/common/exceptions/user-already-has-this-role.exception'
+import { Request, Response } from 'express'
+import { AuthService } from 'src/auth/auth.service'
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(forwardRef(() => AuthService)) private readonly authService: AuthService
+  ) {}
 
   async createUser(
     email: string,
@@ -19,7 +24,7 @@ export class UserService {
     role: AuthenticatedRole = new UserRole()
   ): Promise<void> {
     const isEmailInUse = await this.isEmailInUse(email)
-    if (isEmailInUse) throw new EmailAlreadyInUseException(email)
+    if (isEmailInUse) throw new EmailAlreadyInUseException()
 
     const hashedPassword = await bcrypt.hash(password, 10)
     await this.prismaService.user.create({
@@ -110,5 +115,12 @@ export class UserService {
       where: { id: userId },
       data: { role: role.toPrismaRole() },
     })
+  }
+
+  async deleteMe(request: Request, response: Response, password: string): Promise<void> {
+    const { id, email } = await this.authService.whoAmI(request)
+    await this.validateCredentials(email, password)
+    await this.authService.logOut(request, response)
+    await this.prismaService.user.delete({ where: { id } })
   }
 }

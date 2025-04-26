@@ -15,8 +15,8 @@ export default class ErrorResponseBody implements ResponseBody {
     message: string,
     errors?: { [key: string | number | symbol]: string[] | undefined }
   ) {
-    if (statusCode.valueOf() < 400 || statusCode.valueOf() >= 500)
-      throw new Error('ErrorResponseBody must have a 4xx status code')
+    if (statusCode.valueOf() < 400 || statusCode.valueOf() >= 600)
+      throw new Error('ErrorResponseBody must have a 4xx or 5xx status code')
 
     this.statusCode = statusCode
     this.timestamp = new Date().toISOString()

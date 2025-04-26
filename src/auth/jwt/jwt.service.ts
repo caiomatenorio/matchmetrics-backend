@@ -27,7 +27,8 @@ export class JwtService {
     try {
       await this.nestJwtService.verifyAsync(jwt)
       return true
-    } catch {
+    } catch (error) {
+      console.error(error)
       return false
     }
   }

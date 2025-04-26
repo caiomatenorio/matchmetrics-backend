@@ -1,5 +1,4 @@
 import { HttpStatus } from '@nestjs/common'
-import ErrorResponseBody from '../response-bodies/error-response-body'
 import ConventionalHttpException from './conventional-http.exception'
 import ErrorCode from '../response-bodies/error-code'
 import { ZodError } from 'zod'
@@ -10,21 +9,12 @@ export default class ValidationException extends ConventionalHttpException {
 
     if (formErrors.length) {
       super(
-        new ErrorResponseBody(
-          HttpStatus.BAD_REQUEST,
-          ErrorCode.VALIDATION_ERROR,
-          'Body is required'
-        )
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.VALIDATION_ERROR,
+        'Required body/query/parameter is missing'
       )
     } else {
-      super(
-        new ErrorResponseBody(
-          HttpStatus.BAD_REQUEST,
-          ErrorCode.VALIDATION_ERROR,
-          'Validation error',
-          fieldErrors
-        )
-      )
+      super(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, 'Validation error', fieldErrors)
     }
   }
 }

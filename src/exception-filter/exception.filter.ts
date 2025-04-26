@@ -13,23 +13,29 @@ import ErrorCode from '../common/response-bodies/error-code'
 @Catch()
 export default class ExceptionFilter implements NestExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
-    if (exception instanceof ConventionalHttpException) throw exception
-
     const context = host.switchToHttp()
     const response = context.getResponse<Response>()
-    const status = HttpStatus.INTERNAL_SERVER_ERROR
 
+    let status: HttpStatus
     let errorCode: ErrorCode
     let message: string
+    let errors: { [key: string | number | symbol]: string[] | undefined } | undefined
 
-    if (exception instanceof ConventionalError) {
+    if (exception instanceof ConventionalHttpException) {
+      status = exception.statusCode
+      errorCode = exception.errorCode
+      message = exception.message
+    } else if (exception instanceof ConventionalError) {
+      status = HttpStatus.INTERNAL_SERVER_ERROR
       errorCode = exception.errorCode
       message = exception.message
     } else {
+      status = HttpStatus.INTERNAL_SERVER_ERROR
       errorCode = ErrorCode.UNKNOWN
-      message = 'An unknown error occurred'
+      message = 'Unknown error'
+      console.error(exception)
     }
 
-    response.status(status).json(new ErrorResponseBody(status, errorCode, message))
+    response.status(status).json(new ErrorResponseBody(status, errorCode, message, errors))
   }
 }
