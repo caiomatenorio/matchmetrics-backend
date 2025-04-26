@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common'
 import ResponseBody from './response-body'
-import ErrorCode from './error-code'
+import ErrorCode from '../util/error-code'
 
 export default class ErrorResponseBody implements ResponseBody {
   public statusCode: HttpStatus

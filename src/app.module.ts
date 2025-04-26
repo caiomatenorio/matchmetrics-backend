@@ -3,10 +3,12 @@ import { PrismaModule } from './prisma/prisma.module'
 import { AuthModule } from './auth/auth.module'
 import { UserModule } from './user/user.module'
 import { ScheduleModule } from '@nestjs/schedule'
-import { ChampionshipsModule } from './championships/championships.module'
+import { ChampionshipModule } from './championship/championship.module'
 import { AdminModule } from './admin/admin.module'
 import { ConfigModule } from '@nestjs/config'
 import { EnvModule } from './env/env.module'
+import { CountryModule } from './country/country.module'
+import { TeamModule } from './team/team.module';
 
 @Module({
   imports: [
@@ -14,10 +16,12 @@ import { EnvModule } from './env/env.module'
     AuthModule,
     UserModule,
     ScheduleModule.forRoot(),
-    ChampionshipsModule,
+    ChampionshipModule,
     AdminModule,
     EnvModule,
     ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env'] }),
+    CountryModule,
+    TeamModule,
   ],
 })
 export class AppModule {}

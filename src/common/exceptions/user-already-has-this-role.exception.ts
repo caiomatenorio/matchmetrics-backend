@@ -1,7 +1,7 @@
 import Role from 'src/auth/roles/role'
 import ConventionalHttpException from './conventional-http.exception'
 import { HttpStatus } from '@nestjs/common'
-import ErrorCode from '../response-bodies/error-code'
+import ErrorCode from '../util/error-code'
 
 export default class UserAlreadyHasThisRoleException extends ConventionalHttpException {
   constructor(role: Role) {

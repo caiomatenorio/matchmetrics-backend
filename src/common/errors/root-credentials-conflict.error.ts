@@ -1,4 +1,4 @@
-import ErrorCode from '../response-bodies/error-code'
+import ErrorCode from '../util/error-code'
 import ConventionalError from './conventional.error'
 
 export default class RootCredentialsConflictError extends ConventionalError {

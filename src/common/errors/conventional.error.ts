@@ -1,4 +1,4 @@
-import ErrorCode from '../response-bodies/error-code'
+import ErrorCode from '../util/error-code'
 
 export default class ConventionalError extends Error {
   constructor(

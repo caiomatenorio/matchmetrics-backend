@@ -38,12 +38,11 @@ model Championship {
     name               String
     slug               String   @unique
     season             String
-    start              DateTime
-    end                DateTime
-    country            Country  @relation(fields: [countryId], references: [id], onDelete: NoAction)
-    countryId          String
+    country            Country? @relation(fields: [countrySlug], references: [slug], onDelete: NoAction)
+    countrySlug        String?
     teams              Team[]
     usersThatFavorited User[]
+    matches            Match[]
 }
 
 model Country {
@@ -60,19 +59,24 @@ model Team {
     name          String         @unique
     slug          String         @unique
     shield        String
-    country       Country        @relation(fields: [countryId], references: [id], onDelete: NoAction)
-    countryId     String
+    country       Country        @relation(fields: [countrySlug], references: [slug], onDelete: NoAction)
+    countrySlug   String
     homeMatches   Match[]        @relation("HomeTeam")
     awayMatches   Match[]        @relation("AwayTeam")
     championships Championship[]
 }
 
 model Match {
-    id            String @id @default(cuid())
-    homeTeam      Team   @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: NoAction)
-    homeTeamId    String
-    homeTeamScore Int
-    awayTeam      Team   @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: NoAction)
-    awayTeamId    String
-    awayTeamScore Int
+    id                String       @id @default(cuid())
+    date              DateTime
+    championship      Championship @relation(fields: [championshipSlug], references: [slug], onDelete: NoAction)
+    championshipSlug  String
+    homeTeam          Team         @relation("HomeTeam", fields: [homeTeamSlug], references: [slug], onDelete: NoAction)
+    homeTeamSlug      String
+    homeTeamGoals     Int
+    homeTeamPenalties Int?
+    awayTeam          Team         @relation("AwayTeam", fields: [awayTeamSlug], references: [slug], onDelete: NoAction)
+    awayTeamSlug      String
+    awayTeamGoals     Int
+    awayTeamPenalties Int?
 }

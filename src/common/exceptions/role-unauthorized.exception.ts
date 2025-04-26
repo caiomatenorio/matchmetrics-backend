@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common'
 import ConventionalHttpException from './conventional-http.exception'
-import ErrorCode from '../response-bodies/error-code'
+import ErrorCode from '../util/error-code'
 import Role from 'src/auth/roles/role'
 import AuthenticatedRole from 'src/auth/roles/authenticated.role'
 
