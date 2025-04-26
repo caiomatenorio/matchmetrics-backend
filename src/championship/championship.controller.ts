@@ -81,7 +81,7 @@ export class ChampionshipController {
     params: GetChampionshipTeamsParams,
     @Query(new ZodValidationPipe(getChampionshipTeamsQuerySchema)) query: GetChampionshipTeamsQuery
   ): Promise<SuccessResponseBody<TeamWithCountry[]>> {
-    const teams = await this.championshipsService.getChampionshipTeams(params.slug, query.search)
+    const teams = await this.championshipsService.getChampionshipTeams(params.slug, query)
 
     return new SuccessResponseBody(HttpStatus.OK, 'Teams fetched successfully', teams)
   }

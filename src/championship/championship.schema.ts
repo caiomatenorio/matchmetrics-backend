@@ -22,6 +22,7 @@ export type GetChampionshipTeamsParams = z.infer<typeof getChampionshipTeamsPara
 
 export const getChampionshipTeamsQuerySchema = z.object({
   search: z.string().optional(),
+  page: z.number().optional(),
 })
 
 export type GetChampionshipTeamsQuery = z.infer<typeof getChampionshipTeamsQuerySchema>
@@ -34,6 +35,7 @@ export const getChampionshipMatchesQuerySchema = z.object({
   search: z.string().optional(),
   minDate: z.date().optional(),
   maxDate: z.date().optional(),
+  page: z.number().optional(),
 })
 
 export type GetChampionshipMatchesQuery = z.infer<typeof getChampionshipMatchesQuerySchema>

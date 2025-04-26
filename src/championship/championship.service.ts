@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/prisma/prisma.service'
-import { GetChampionshipMatchesQuery, GetChampionshipsQuery } from './championship.schema'
+import {
+  GetChampionshipMatchesQuery,
+  GetChampionshipsQuery,
+  GetChampionshipTeamsQuery,
+} from './championship.schema'
 import { Championship, Country, Match, Team } from 'generated/prisma'
 import { AuthService } from 'src/auth/auth.service'
 import { Request } from 'express'
@@ -232,8 +236,10 @@ export class ChampionshipService {
    */
   async getChampionshipTeams(
     championshipSlug: string,
-    search?: string
+    query: GetChampionshipTeamsQuery
   ): Promise<TeamWithCountry[]> {
+    const { search, page } = query
+
     const { teams } =
       (await this.prismaService.championship.findUnique({
         where: { slug: championshipSlug }, // Find championship by slug
@@ -242,6 +248,11 @@ export class ChampionshipService {
             omit: { countrySlug: true },
             include: { country: true },
             where: search ? { name: { contains: search } } : undefined, // Filter teams by name if search is provided
+
+            take: page ? 10 : undefined, // Pagination
+            skip: page ? (page - 1) * 10 : undefined, // Pagination
+
+            orderBy: { name: 'asc' }, // Order by name in ascending order
           },
         },
       })) ?? {}
@@ -265,7 +276,7 @@ export class ChampionshipService {
     championshipSlug: string,
     query: GetChampionshipMatchesQuery
   ): Promise<MatchWithTeams[]> {
-    const { search, minDate, maxDate } = query
+    const { search, minDate, maxDate, page } = query
 
     const { matches } =
       (await this.prismaService.championship.findUnique({
@@ -291,6 +302,11 @@ export class ChampionshipService {
                     },
                   }
                 : undefined,
+
+            take: page ? 10 : undefined, // Pagination
+            skip: page ? (page - 1) * 10 : undefined, // Pagination
+
+            orderBy: { date: 'desc' }, // Order by date in descending order
           },
         },
       })) ?? {}
