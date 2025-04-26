@@ -198,6 +198,13 @@ export class ChampionshipService {
     })
   }
 
+  /**
+   * Get all teams in a championship, optionally filtered by name.
+   * @param championshipSlug - Slug of the championship
+   * @param search - Optional search term for team name
+   * @returns Array of teams in the championship
+   * @throws {ChampionshipNotFoundException} if the championship does not exist
+   */
   async getChampionshipTeams(championshipSlug: string, search?: string): Promise<Team[]> {
     const { teams } =
       (await this.prismaService.championship.findUnique({
@@ -210,6 +217,16 @@ export class ChampionshipService {
     return teams
   }
 
+  /**
+   * Get all matches in a championship, optionally filtered by search term and date range.
+   * @param championshipSlug - Slug of the championship
+   * @param query - Query parameters for filtering matches
+   * @param query.search - Optional search term for team name
+   * @param query.minDate - Optional minimum date for filtering matches
+   * @param query.maxDate - Optional maximum date for filtering matches
+   * @returns Array of matches in the championship
+   * @throws {ChampionshipNotFoundException} if the championship does not exist
+   */
   async getChampionshipMatches(
     championshipSlug: string,
     query: GetChampionshipMatchesQuery
