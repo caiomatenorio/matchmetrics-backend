@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { GetChampionshipMatchesQuery, GetChampionshipsQuery } from './championship.schema'
-import { Championship, Match, Team } from 'generated/prisma'
+import { Championship, Country, Match, Team } from 'generated/prisma'
 import { AuthService } from 'src/auth/auth.service'
 import { Request } from 'express'
 import ParameterRequiresAuthException from 'src/common/exceptions/parameter-requires-auth.exception'
@@ -11,8 +11,22 @@ import { CountryService } from 'src/country/country.service'
 import CountryNotFoundException from 'src/common/exceptions/country-not-found.exception'
 import TransactionablePrismaClient from 'src/common/util/transaction-prisma-client'
 
-type ChampionshipWithUsersThatFavorited = Championship & { usersThatFavorited: { id: string }[] }
-type ChampionshipWithFavoritedStatus = Championship & { favorited: boolean }
+export type ChampionshipWithCountry = Omit<Championship, 'countrySlug'> & {
+  country: Country | null
+}
+
+type ChampionshipWithUsersThatFavorited = ChampionshipWithCountry & {
+  usersThatFavorited: { id: string }[]
+}
+
+export type ChampionshipWithFavoritedStatus = ChampionshipWithCountry & { favorited: boolean }
+
+export type TeamWithCountry = Omit<Team, 'countrySlug'> & { country: Country | null }
+
+export type MatchWithTeams = Omit<Match, 'homeTeamSlug' | 'awayTeamSlug'> & {
+  homeTeam: Team
+  awayTeam: Team
+}
 
 @Injectable()
 export class ChampionshipService {
@@ -102,21 +116,27 @@ export class ChampionshipService {
   ): Promise<ChampionshipWithFavoritedStatus[]> {
     const { search, year, country, favorited, page } = query
 
-    let championships = await this.prismaService.championship.findMany({
-      where: {
-        name: { contains: search, mode: 'insensitive' }, // Case insensitive search by name
-        country: country ? { slug: country } : undefined, // Filter by country slug
-      },
+    let championships: ChampionshipWithUsersThatFavorited[] =
+      await this.prismaService.championship.findMany({
+        where: {
+          name: { contains: search, mode: 'insensitive' }, // Case insensitive search by name
+          country: country ? { slug: country } : undefined, // Filter by country slug
+        },
 
-      // Include ids of users that favorited the championship
-      include: { usersThatFavorited: { select: { id: true } } },
+        omit: { countrySlug: true }, // Omit the countrySlug field
 
-      // Pagination
-      take: page ? 10 : undefined,
-      skip: page ? (page - 1) * 10 : undefined,
+        // Include ids of users that favorited the championship and country details
+        include: {
+          usersThatFavorited: { select: { id: true } },
+          country: true,
+        },
 
-      orderBy: { name: 'asc' }, // Order by start date in descending order
-    })
+        // Pagination
+        take: page ? 10 : undefined,
+        skip: page ? (page - 1) * 10 : undefined,
+
+        orderBy: { name: 'asc' }, // Order by start date in descending order
+      })
 
     if (year) championships = this.filterChampionshipsByYear(championships, year)
 
@@ -140,8 +160,12 @@ export class ChampionshipService {
    * @returns The championship object
    * @throws ChampionshipNotFoundException if the championship does not exist
    */
-  async getChampionshipBySlug(slug: string): Promise<Championship> {
-    const championship = await this.prismaService.championship.findUnique({ where: { slug } })
+  async getChampionshipBySlug(slug: string): Promise<ChampionshipWithCountry> {
+    const championship = await this.prismaService.championship.findUnique({
+      where: { slug }, // Find championship by slug
+      omit: { countrySlug: true }, // Omit the countrySlug field
+      include: { country: true }, // Include country details
+    })
 
     if (!championship) throw new ChampionshipNotFoundException()
 
@@ -158,9 +182,10 @@ export class ChampionshipService {
     slug: string,
     tpc?: TransactionablePrismaClient
   ): Promise<boolean> {
-    const exists = await this.prismaService
-      .checkTransaction(tpc)
-      .championship.findUnique({ where: { slug } })
+    const exists = await this.prismaService.checkTransaction(tpc).championship.findUnique({
+      where: { slug },
+      select: { id: true }, // Select only the id field to check existence
+    })
 
     return !!exists
   }
@@ -205,11 +230,20 @@ export class ChampionshipService {
    * @returns Array of teams in the championship
    * @throws {ChampionshipNotFoundException} if the championship does not exist
    */
-  async getChampionshipTeams(championshipSlug: string, search?: string): Promise<Team[]> {
+  async getChampionshipTeams(
+    championshipSlug: string,
+    search?: string
+  ): Promise<TeamWithCountry[]> {
     const { teams } =
       (await this.prismaService.championship.findUnique({
         where: { slug: championshipSlug }, // Find championship by slug
-        select: { teams: search ? { where: { name: { contains: search } } } : true }, // Select teams with optional search filter
+        select: {
+          teams: {
+            omit: { countrySlug: true },
+            include: { country: true },
+            where: search ? { name: { contains: search } } : undefined, // Filter teams by name if search is provided
+          },
+        },
       })) ?? {}
 
     if (!teams) throw new ChampionshipNotFoundException()
@@ -230,7 +264,7 @@ export class ChampionshipService {
   async getChampionshipMatches(
     championshipSlug: string,
     query: GetChampionshipMatchesQuery
-  ): Promise<Match[]> {
+  ): Promise<MatchWithTeams[]> {
     const { search, minDate, maxDate } = query
 
     const { matches } =
@@ -238,11 +272,14 @@ export class ChampionshipService {
         where: { slug: championshipSlug }, // Find championship by slug
 
         select: {
-          matches:
-            search || minDate || maxDate
-              ? // If a filter is provided, apply it to the matches
-                {
-                  where: {
+          matches: {
+            omit: { homeTeamSlug: true, awayTeamSlug: true }, // Omit the team slugs
+
+            include: { homeTeam: true, awayTeam: true },
+
+            where:
+              search || minDate || maxDate
+                ? {
                     OR: [
                       { homeTeam: { name: { contains: search } } }, // Search by home team name
                       { awayTeam: { name: { contains: search } } }, // Search by away team name
@@ -252,10 +289,9 @@ export class ChampionshipService {
                       gte: minDate, // Filter by minimum date
                       lte: maxDate, // Filter by maximum date
                     },
-                  },
-                }
-              : // Otherwise, select all matches
-                true,
+                  }
+                : undefined,
+          },
         },
       })) ?? {}
 

@@ -7,22 +7,27 @@ export const getChampionshipsQuerySchema = z.object({
   favorited: z.enum(['true', 'false']).optional(),
   page: z.number().optional(),
 })
+
 export type GetChampionshipsQuery = z.infer<typeof getChampionshipsQuerySchema>
 
 export const getChampionshipBySlugParamsSchema = z.object({
   slug: z.string(),
 })
+
 export type GetChampionshipBySlugParams = z.infer<typeof getChampionshipBySlugParamsSchema>
 
 export const getChampionshipTeamsParamsSchema = getChampionshipBySlugParamsSchema
+
 export type GetChampionshipTeamsParams = z.infer<typeof getChampionshipTeamsParamsSchema>
 
 export const getChampionshipTeamsQuerySchema = z.object({
   search: z.string().optional(),
 })
+
 export type GetChampionshipTeamsQuery = z.infer<typeof getChampionshipTeamsQuerySchema>
 
 export const getChampionshipMatchesParamsSchema = getChampionshipBySlugParamsSchema
+
 export type GetChampionshipMatchesParams = z.infer<typeof getChampionshipMatchesParamsSchema>
 
 export const getChampionshipMatchesQuerySchema = z.object({
@@ -30,6 +35,7 @@ export const getChampionshipMatchesQuerySchema = z.object({
   minDate: z.date().optional(),
   maxDate: z.date().optional(),
 })
+
 export type GetChampionshipMatchesQuery = z.infer<typeof getChampionshipMatchesQuerySchema>
 
 export const createChampionshipSchema = z.object({

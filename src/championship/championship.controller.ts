@@ -10,11 +10,16 @@ import {
   Req,
   UsePipes,
 } from '@nestjs/common'
-import { ChampionshipService } from './championship.service'
+import {
+  ChampionshipService,
+  ChampionshipWithCountry,
+  ChampionshipWithFavoritedStatus,
+  MatchWithTeams,
+  TeamWithCountry,
+} from './championship.service'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
-import { Championship, Team } from 'generated/prisma'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import {
   CreateChampionshipBody,
@@ -46,7 +51,7 @@ export class ChampionshipController {
   async getAllChampionships(
     @Req() request: Request,
     @Query() query: GetChampionshipsQuery
-  ): Promise<SuccessResponseBody<(Championship & { favorited: boolean })[]>> {
+  ): Promise<SuccessResponseBody<ChampionshipWithFavoritedStatus[]>> {
     const championships = await this.championshipsService.getAllChampionships(request, query)
 
     return new SuccessResponseBody(
@@ -62,7 +67,7 @@ export class ChampionshipController {
   @HttpCode(HttpStatus.OK)
   async getChampionshipBySlug(
     @Param() params: GetChampionshipBySlugParams
-  ): Promise<SuccessResponseBody<Championship>> {
+  ): Promise<SuccessResponseBody<ChampionshipWithCountry>> {
     const championship = await this.championshipsService.getChampionshipBySlug(params.slug)
 
     return new SuccessResponseBody(HttpStatus.OK, 'Championship fetched successfully', championship)
@@ -75,7 +80,7 @@ export class ChampionshipController {
     @Param(new ZodValidationPipe(getChampionshipTeamsParamsSchema))
     params: GetChampionshipTeamsParams,
     @Query(new ZodValidationPipe(getChampionshipTeamsQuerySchema)) query: GetChampionshipTeamsQuery
-  ): Promise<SuccessResponseBody<Team[]>> {
+  ): Promise<SuccessResponseBody<TeamWithCountry[]>> {
     const teams = await this.championshipsService.getChampionshipTeams(params.slug, query.search)
 
     return new SuccessResponseBody(HttpStatus.OK, 'Teams fetched successfully', teams)
@@ -89,7 +94,7 @@ export class ChampionshipController {
     params: GetChampionshipMatchesParams,
     @Query(new ZodValidationPipe(getChampionshipMatchesQuerySchema))
     query: GetChampionshipMatchesQuery
-  ) {
+  ): Promise<SuccessResponseBody<MatchWithTeams[]>> {
     const matches = await this.championshipsService.getChampionshipMatches(params.slug, query)
 
     return new SuccessResponseBody(HttpStatus.OK, 'Matches fetched successfully', matches)

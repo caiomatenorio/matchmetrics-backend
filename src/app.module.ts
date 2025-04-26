@@ -8,6 +8,7 @@ import { AdminModule } from './admin/admin.module'
 import { ConfigModule } from '@nestjs/config'
 import { EnvModule } from './env/env.module'
 import { CountryModule } from './country/country.module'
+import { TeamModule } from './team/team.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CountryModule } from './country/country.module'
     EnvModule,
     ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env'] }),
     CountryModule,
+    TeamModule,
   ],
 })
 export class AppModule {}
