@@ -16,6 +16,16 @@ export const getChampionshipBySlugParamsSchema = z.object({
 
 export type GetChampionshipBySlugParams = z.infer<typeof getChampionshipBySlugParamsSchema>
 
+export const getChampionshipTeamsParamsSchema = getChampionshipBySlugParamsSchema
+
+export type GetChampionshipTeamsParams = z.infer<typeof getChampionshipTeamsParamsSchema>
+
+export const getChampionshipTeamsQuerySchema = z.object({
+  search: z.string().optional(),
+})
+
+export type GetChampionshipTeamsQuery = z.infer<typeof getChampionshipTeamsQuerySchema>
+
 export const createChampionshipSchema = z.object({
   name: z
     .string()

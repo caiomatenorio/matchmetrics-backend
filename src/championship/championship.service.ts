@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { GetChampionshipsQuery } from './championship.schema'
-import { Championship } from 'generated/prisma'
+import { Championship, Team } from 'generated/prisma'
 import { AuthService } from 'src/auth/auth.service'
 import { Request } from 'express'
 import ParameterRequiresAuthException from 'src/common/exceptions/parameter-requires-auth.exception'
@@ -196,5 +196,17 @@ export class ChampionshipService {
         },
       })
     })
+  }
+
+  async getChampionshipTeams(championshipSlug: string, search?: string): Promise<Team[]> {
+    const { teams } =
+      (await this.prismaService.championship.findUnique({
+        where: { slug: championshipSlug }, // Find championship by slug
+        select: { teams: search ? { where: { name: { contains: search } } } : true }, // Select teams with optional search filter
+      })) ?? {}
+
+    if (!teams) throw new ChampionshipNotFoundException()
+
+    return teams
   }
 }

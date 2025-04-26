@@ -14,7 +14,7 @@ import { ChampionshipService } from './championship.service'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
-import { Championship } from 'generated/prisma'
+import { Championship, Team } from 'generated/prisma'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import {
   CreateChampionshipBody,
@@ -23,6 +23,10 @@ import {
   getChampionshipBySlugParamsSchema,
   GetChampionshipsQuery,
   getChampionshipsQuerySchema,
+  GetChampionshipTeamsParams,
+  getChampionshipTeamsParamsSchema,
+  GetChampionshipTeamsQuery,
+  getChampionshipTeamsQuerySchema,
 } from './championship.schema'
 import { Request } from 'express'
 import { AdminOnly, Public } from 'src/auth/auth.decorator'
@@ -59,6 +63,21 @@ export class ChampionshipController {
 
     return new SuccessResponseBody(HttpStatus.OK, 'Championship fetched successfully', championship)
   }
+
+  @Public()
+  @Get('/:slug/teams')
+  @HttpCode(HttpStatus.OK)
+  async getChampionshipTeams(
+    @Param(new ZodValidationPipe(getChampionshipTeamsParamsSchema))
+    params: GetChampionshipTeamsParams,
+    @Query(new ZodValidationPipe(getChampionshipTeamsQuerySchema)) query: GetChampionshipTeamsQuery
+  ): Promise<SuccessResponseBody<Team[]>> {
+    const teams = await this.championshipsService.getChampionshipTeams(params.slug, query.search)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Teams fetched successfully', teams)
+  }
+
+  // async getChampionshipMatches()
 
   @AdminOnly()
   @Post()
