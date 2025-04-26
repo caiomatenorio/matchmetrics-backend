@@ -8,6 +8,7 @@ import RoleUnauthorizedException from 'src/common/exceptions/role-unauthorized.e
 import GuestRole from './roles/guest.role'
 import UserRole from './roles/user.role'
 import { PrismaService } from 'src/prisma/prisma.service'
+import TransactionablePrismaClient from 'src/common/util/transaction-prisma-client'
 
 @Injectable()
 export class AuthService {
@@ -66,13 +67,30 @@ export class AuthService {
     return false
   }
 
+  private async getUserInfoFromRefreshToken(
+    refreshToken: string,
+    tpc: TransactionablePrismaClient
+  ): Promise<{ id: string; email: string; role: string } | null> {
+    const { userId } = (await this.sessionService.getSessionByRefreshToken(refreshToken, tpc)) ?? {}
+
+    if (!userId) return null
+
+    const email = await this.userService.getUserEmail(userId, tpc)
+    const role = (await this.userService.getUserRole(userId, tpc)).name
+
+    return { id: userId, email, role }
+  }
+
   /**
    * Retrieve the user information from the access token or refresh token
    * @param request - The request object to get the session headers
    * @returns id, email, and role of the user
    * @throws {RoleUnauthorizedException} if the user is not authenticated
    */
-  async whoAmI(request: Request): Promise<{ id: string; email: string; role: string }> {
+  async whoAmI(
+    request: Request,
+    tpc?: TransactionablePrismaClient
+  ): Promise<{ id: string; email: string; role: string }> {
     const { accessToken, refreshToken } = this.sessionService.getTokenHeaders(request)
 
     if (accessToken && (await this.jwtService.isJwtValid(accessToken))) {
@@ -81,20 +99,15 @@ export class AuthService {
     }
 
     if (refreshToken) {
-      const result = await this.prismaService.$transaction(async tpc => {
-        const { userId } =
-          (await this.sessionService.getSessionByRefreshToken(refreshToken, tpc)) ?? {}
+      const userInfo = tpc
+        ? // If the method is called from a transaction, use the transactionable prisma client
+          await this.getUserInfoFromRefreshToken(refreshToken, tpc)
+        : // Otherwise, we need to create a new transaction to mantain the atomicity of the operation
+          await this.prismaService.$transaction(
+            async tpc => await this.getUserInfoFromRefreshToken(refreshToken, tpc)
+          )
 
-        if (userId) {
-          return {
-            id: userId,
-            email: await this.userService.getUserEmail(userId, tpc),
-            role: (await this.userService.getUserRole(userId, tpc)).name,
-          }
-        }
-      })
-
-      if (result) return result
+      if (userInfo) return userInfo
     }
 
     throw new RoleUnauthorizedException(new GuestRole(), new UserRole())
