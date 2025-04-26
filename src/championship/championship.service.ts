@@ -57,7 +57,8 @@ export class ChampionshipService {
 
         return year >= parseInt(seasonStart) && year <= parseInt(seasonEnd)
       } catch {
-        return false // If the season is not in the expected format, exclude it
+        console.warn(`Unexpected season format for championship: ${championship.season}`) // Log unexpected season format
+        return false // Exclude championships with unexpected season format
       }
     })
   }
@@ -139,7 +140,7 @@ export class ChampionshipService {
         take: page ? 10 : undefined,
         skip: page ? (page - 1) * 10 : undefined,
 
-        orderBy: { name: 'asc' }, // Order by start date in descending order
+        orderBy: { name: 'asc' }, // Order by name in ascending order
       })
 
     if (year) championships = this.filterChampionshipsByYear(championships, year)
