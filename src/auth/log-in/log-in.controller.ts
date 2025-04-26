@@ -1,12 +1,12 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Res, UsePipes } from '@nestjs/common'
 import { AuthService } from '../auth.service'
-import { Public } from '../auth.guard'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import { LogInInput, logInSchema } from './log-in.schema'
 import { Response } from 'express'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
+import { Public } from '../auth.decorator'
 
 @Controller('log-in')
 export class LogInController {

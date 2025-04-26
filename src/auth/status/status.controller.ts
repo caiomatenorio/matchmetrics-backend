@@ -1,8 +1,8 @@
 import { Controller, Get, HttpStatus, Req } from '@nestjs/common'
-import { Public } from '../auth.guard'
 import SuccessResponseBody from 'src/common/response-bodies/success-response-body'
 import { AuthService } from '../auth.service'
 import { Request } from 'express'
+import { Public } from '../auth.decorator'
 
 @Controller('auth/status')
 export class StatusController {

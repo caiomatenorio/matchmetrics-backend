@@ -1,13 +1,18 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import UserDoesNotExistException from 'src/common/exceptions/user-does-not-exist.exception'
-import { UsersService } from 'src/users/users.service'
+import { UserService } from 'src/user/user.service'
 import { RefreshTokenService } from '../refresh-token/refresh-token.service'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { JwtService } from '../jwt/jwt.service'
-import UserUnauthorizedException from 'src/common/exceptions/user-unauthorized.exception'
 import { Request, Response } from 'express'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { Session } from 'generated/prisma'
+import RoleUnauthorizedException from 'src/common/exceptions/role-unauthorized.exception'
+import AuthenticatedRole from '../roles/authenticated.role'
+import Role from '../roles/role'
+import GuestRole from '../roles/guest.role'
+import Ref from 'src/common/util/ref'
+import UserRole from '../roles/user.role'
 
 @Injectable()
 export class SessionService {
@@ -17,7 +22,7 @@ export class SessionService {
     @Inject(forwardRef(() => RefreshTokenService))
     private readonly refreshTokenService: RefreshTokenService,
 
-    private readonly usersService: UsersService,
+    private readonly userService: UserService,
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService
   ) {
@@ -42,10 +47,11 @@ export class SessionService {
   }
 
   async createSession(response: Response, userId: string): Promise<void> {
-    const userExists = await this.usersService.userExists(userId)
+    const userExists = await this.userService.userExists(userId)
     if (!userExists) throw new UserDoesNotExistException()
 
-    const email = await this.usersService.getUserEmailById(userId)
+    const email = await this.userService.getUserEmail(userId)
+    const userRole = await this.userService.getUserRole(userId)
 
     const refreshToken = this.refreshTokenService.generateRefreshToken()
     const expiresAt = new Date(Date.now() + this.sessionExpiresInMillis)
@@ -55,21 +61,39 @@ export class SessionService {
       select: { id: true },
     })
 
-    const accessToken = await this.jwtService.generateJwt(sessionId, userId, email)
+    const accessToken = await this.jwtService.generateJwt(sessionId, userId, email, userRole)
 
-    this.setTokenHeaders(response, accessToken, refreshToken) // Send the tokens in the response headers
+    this.setTokenHeaders(response, accessToken, refreshToken)
   }
 
-  async validateSession(request: Request, response: Response): Promise<boolean> {
+  async validateSession(
+    request: Request,
+    response: Response,
+    minimumRole: AuthenticatedRole
+  ): Promise<boolean> {
+    const currentUserRoleRef: Ref<Role> = new Ref(new GuestRole())
     const { accessToken, refreshToken } = this.getTokenHeaders(request)
 
-    // If there's an access token and it's valid, proceed
-    if (accessToken && (await this.jwtService.isJwtValid(accessToken))) return true
+    /*
+     * There's no need to check if the jwt is valid, because if it's not, the current role will
+     * still be Guest, whose hierarchy will always be lower than any authenticated role. However,
+     * we do it to improve readability of the code.
+     */
+    if (accessToken && (await this.jwtService.isJwtValid(accessToken))) {
+      currentUserRoleRef.value =
+        (await this.jwtService.getRoleFromJwt(accessToken)) ?? currentUserRoleRef.value
+
+      if (currentUserRoleRef.value.hierarchy >= minimumRole.hierarchy) return true
+    }
 
     if (refreshToken) {
       try {
-        const { newAccessToken, newRefreshToken } = await this.refreshSession(refreshToken)
-        this.setTokenHeaders(response, newAccessToken, newRefreshToken) // Send the new tokens in the response headers
+        const { newAccessToken, newRefreshToken } = await this.refreshSession(
+          refreshToken,
+          minimumRole,
+          currentUserRoleRef
+        )
+        this.setTokenHeaders(response, newAccessToken, newRefreshToken)
         return true
       } catch {
         /* empty */
@@ -77,45 +101,61 @@ export class SessionService {
     }
 
     this.unsetTokenHeaders(response)
-    throw new UserUnauthorizedException() // If there's no valid access token and no valid refresh token, return 401
+    // If there's an access token and it's valid, proceed
+    throw new RoleUnauthorizedException(currentUserRoleRef.value, minimumRole)
   }
 
   async refreshSession(
-    refreshToken: string
+    refreshToken: string,
+    minimumRole: AuthenticatedRole,
+    currentUserRoleRef: Ref<Role>
   ): Promise<{ newAccessToken: string; newRefreshToken: string }> {
-    const { id: sessionId } =
+    const { id: sessionId, userId } =
       (await this.prismaService.session.findUnique({
         where: { refreshToken, expiresAt: { gte: new Date() } },
-        select: { id: true },
-      })) ?? {} // If the session doesn't exist, id will be undefined
-    if (!sessionId) throw new Error('Session not found') // Generic error to quit validateSession try/catch block
+        select: { id: true, userId: true },
+      })) ?? {}
+    if (!(sessionId && userId)) throw new Error('Invalid refresh token') // Generic error to quit try-catch block
 
+    currentUserRoleRef.value = await this.userService.getUserRole(userId)
+    if (currentUserRoleRef.value.hierarchy < minimumRole.hierarchy)
+      throw new Error('Role unauthorized') // Generic error to quit try-catch block
+
+    const email = await this.userService.getUserEmail(userId)
     const newRefreshToken = this.refreshTokenService.generateRefreshToken()
     const expiresAt = new Date(Date.now() + this.sessionExpiresInMillis)
 
-    const { userId } = await this.prismaService.session.update({
+    await this.prismaService.session.update({
       where: { id: sessionId },
       data: { refreshToken: newRefreshToken, expiresAt },
-      select: { userId: true },
+      select: { id: true },
     })
-    const email = await this.usersService.getUserEmailById(userId)
 
-    const newAccessToken = await this.jwtService.generateJwt(sessionId, userId, email)
+    const newAccessToken = await this.jwtService.generateJwt(
+      sessionId,
+      userId,
+      email,
+      currentUserRoleRef.value as AuthenticatedRole // Since we just fetched the role from the database, we can safely cast it
+    )
 
     return { newAccessToken, newRefreshToken }
   }
 
   async deleteSession(request: Request, response: Response): Promise<void> {
     const { refreshToken } = this.getTokenHeaders(request)
-    if (!refreshToken) throw new UserUnauthorizedException()
 
-    try {
-      await this.prismaService.session.delete({ where: { refreshToken } })
-    } catch {
-      throw new UserUnauthorizedException() // If the refresh token is not valid, return 401
+    if (refreshToken) {
+      try {
+        await this.prismaService.session.delete({ where: { refreshToken } })
+        this.unsetTokenHeaders(response)
+        return
+      } catch {
+        /* empty */
+      }
     }
 
-    this.unsetTokenHeaders(response) // Remove the tokens from the response headers
+    this.unsetTokenHeaders(response)
+    throw new RoleUnauthorizedException(new GuestRole(), new UserRole())
   }
 
   @Cron(CronExpression.EVERY_HOUR)

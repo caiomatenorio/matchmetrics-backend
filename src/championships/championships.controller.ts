@@ -2,10 +2,10 @@ import { Controller, Get, HttpStatus, Query, Req, UsePipes } from '@nestjs/commo
 import { ChampionshipsService } from './championships.service'
 import SuccessResponseBody from 'src/common/response-bodies/success-response-body'
 import { Championship } from 'generated/prisma'
-import { Public } from 'src/auth/auth.guard'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import { GetChampionshipsQuery, getChampionshipsQuerySchema } from './championship.schema'
 import { Request } from 'express'
+import { Public } from 'src/auth/auth.decorator'
 
 @Controller('championships')
 export class ChampionshipsController {

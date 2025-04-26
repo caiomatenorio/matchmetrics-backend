@@ -1,8 +1,11 @@
-import { CanActivate, ExecutionContext, Injectable, SetMetadata } from '@nestjs/common'
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { Observable } from 'rxjs'
 import { SessionService } from './session/session.service'
 import { Reflector } from '@nestjs/core'
 import { Request, Response } from 'express'
+import { AUTH_KEY } from './auth.decorator'
+import Role from './roles/role'
+import AuthenticatedRole from './roles/authenticated.role'
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -12,20 +15,19 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    const minimumRole = this.getMinimumRole(context)
+    if (!(minimumRole instanceof AuthenticatedRole)) return true
+
     const request = context.switchToHttp().getRequest<Request>()
     const response = context.switchToHttp().getResponse<Response>()
 
-    if (this.isPublic(context)) return true
-    return this.sessionService.validateSession(request, response)
+    return this.sessionService.validateSession(request, response, minimumRole)
   }
 
-  private isPublic(context: ExecutionContext): boolean {
-    return this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+  private getMinimumRole(context: ExecutionContext): Role {
+    return this.reflector.getAllAndOverride<Role>(AUTH_KEY, [
       context.getHandler(),
       context.getClass(),
     ])
   }
 }
-
-const IS_PUBLIC_KEY = 'isPublic'
-export const Public = () => SetMetadata(IS_PUBLIC_KEY, true)

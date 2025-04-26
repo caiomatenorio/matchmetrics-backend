@@ -1,27 +1,29 @@
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { SessionService } from './session/session.service'
-import { UsersService } from 'src/users/users.service'
+import { UserService } from 'src/user/user.service'
 import { Request, Response } from 'express'
 import { JwtService } from './jwt/jwt.service'
 import { RefreshTokenService } from './refresh-token/refresh-token.service'
-import UserUnauthorizedException from 'src/common/exceptions/user-unauthorized.exception'
+import RoleUnauthorizedException from 'src/common/exceptions/role-unauthorized.exception'
+import GuestRole from './roles/guest.role'
+import UserRole from './roles/user.role'
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
+    @Inject(forwardRef(() => UserService)) private readonly userService: UserService,
     private readonly sessionService: SessionService,
     private readonly jwtService: JwtService,
     private readonly refreshTokenService: RefreshTokenService
   ) {}
 
   async signUp(email: string, password: string): Promise<void> {
-    await this.usersService.createUser(email, password)
+    await this.userService.createUser(email, password)
   }
 
   async logIn(email: string, password: string, response: Response): Promise<void> {
-    await this.usersService.validateCredentials(email, password)
-    const userId = await this.usersService.getUserIdByEmail(email)
+    await this.userService.validateCredentials(email, password)
+    const userId = await this.userService.getUserIdByEmail(email)
     await this.sessionService.createSession(response, userId)
   }
 
@@ -37,19 +39,26 @@ export class AuthService {
     return false
   }
 
-  async whoAmI(request: Request): Promise<{ id: string; email: string }> {
+  async whoAmI(request: Request): Promise<{ id: string; email: string; role: string }> {
     const { accessToken, refreshToken } = this.sessionService.getTokenHeaders(request)
 
-    if (accessToken) {
-      const { userId: id, email } = (await this.jwtService.getJwtPayload(accessToken)) ?? {}
-      if (id && email) return { id, email }
+    if (accessToken && (await this.jwtService.isJwtValid(accessToken))) {
+      const { userId: id, email, role } = (await this.jwtService.getJwtPayload(accessToken)) ?? {}
+      if (id && email && role) return { id, email, role: role.name }
     }
 
     if (refreshToken) {
       const { userId } = (await this.sessionService.getSessionByRefreshToken(refreshToken)) ?? {}
-      if (userId) return { id: userId, email: await this.usersService.getUserEmailById(userId) }
+
+      if (userId) {
+        return {
+          id: userId,
+          email: await this.userService.getUserEmail(userId),
+          role: (await this.userService.getUserRole(userId)).name,
+        }
+      }
     }
 
-    throw new UserUnauthorizedException()
+    throw new RoleUnauthorizedException(new GuestRole(), new UserRole())
   }
 }

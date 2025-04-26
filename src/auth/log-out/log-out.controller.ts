@@ -4,11 +4,13 @@ import { AuthService } from '../auth.service'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
+import { Authenticated } from '../auth.decorator'
 
 @Controller('log-out')
 export class LogOutController {
   constructor(private readonly authService: AuthService) {}
 
+  @Authenticated()
   @Post()
   @HttpCode(HttpStatus.OK)
   async logOut(
