@@ -40,7 +40,7 @@ model Championship {
     season             String
     start              DateTime
     end                DateTime
-    country            Country  @relation(fields: [countryId], references: [id])
+    country            Country  @relation(fields: [countryId], references: [id], onDelete: NoAction)
     countryId          String
     teams              Team[]
     usersThatFavorited User[]
@@ -60,7 +60,7 @@ model Team {
     name          String         @unique
     slug          String         @unique
     shield        String
-    country       Country        @relation(fields: [countryId], references: [id])
+    country       Country        @relation(fields: [countryId], references: [id], onDelete: NoAction)
     countryId     String
     homeMatches   Match[]        @relation("HomeTeam")
     awayMatches   Match[]        @relation("AwayTeam")
@@ -69,10 +69,10 @@ model Team {
 
 model Match {
     id            String @id @default(cuid())
-    homeTeam      Team   @relation("HomeTeam", fields: [homeTeamId], references: [id])
+    homeTeam      Team   @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: NoAction)
     homeTeamId    String
     homeTeamScore Int
-    awayTeam      Team   @relation("AwayTeam", fields: [awayTeamId], references: [id])
+    awayTeam      Team   @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: NoAction)
     awayTeamId    String
     awayTeamScore Int
 }
