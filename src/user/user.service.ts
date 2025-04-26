@@ -10,6 +10,7 @@ import AdminRole from 'src/auth/roles/admin.role'
 import UserAlreadyHasThisRoleException from 'src/common/exceptions/user-already-has-this-role.exception'
 import { Request, Response } from 'express'
 import { AuthService } from 'src/auth/auth.service'
+import TransactionablePrismaClient from 'src/common/util/transaction-prisma-client'
 
 @Injectable()
 export class UserService {
@@ -21,13 +22,15 @@ export class UserService {
   async createUser(
     email: string,
     password: string,
-    role: AuthenticatedRole = new UserRole()
+    role: AuthenticatedRole = new UserRole(),
+    tpc?: TransactionablePrismaClient
   ): Promise<void> {
-    const isEmailInUse = await this.isEmailInUse(email)
+    const isEmailInUse = await this.isEmailInUse(email, tpc)
     if (isEmailInUse) throw new EmailAlreadyInUseException()
 
     const hashedPassword = await bcrypt.hash(password, 10)
-    await this.prismaService.user.create({
+
+    await this.prismaService.checkTransaction(tpc).user.create({
       data: {
         email,
         password: hashedPassword,
@@ -36,8 +39,8 @@ export class UserService {
     })
   }
 
-  async isEmailInUse(email: string): Promise<boolean> {
-    const admin = await this.prismaService.user.findUnique({
+  async isEmailInUse(email: string, tpc?: TransactionablePrismaClient): Promise<boolean> {
+    const admin = await this.prismaService.checkTransaction(tpc).user.findUnique({
       where: { email },
       select: { id: true },
     })

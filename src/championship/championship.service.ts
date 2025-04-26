@@ -9,7 +9,7 @@ import ChampionshipNotFoundException from 'src/common/exceptions/championship-no
 import ChampionshipAlreadyExistsException from 'src/common/exceptions/championship-already-exists.exception'
 import { CountryService } from 'src/country/country.service'
 import CountryNotFoundException from 'src/common/exceptions/country-not-found.exception'
-import TransactionPrismaClient from 'src/common/util/transaction-prisma-client'
+import TransactionablePrismaClient from 'src/common/util/transaction-prisma-client'
 
 type ChampionshipWithUsersThatFavorited = Championship & { usersThatFavorited: { id: string }[] }
 type ChampionshipWithFavoritedStatus = Championship & { favorited: boolean }
@@ -149,16 +149,20 @@ export class ChampionshipService {
   }
 
   /**
-   * Check if a championship exists by its slug. Must be used inside a transaction.
+   * Check if a championship exists in the database.
    * @param slug - Slug of the championship
-   * @param prisma - Prisma client instance inside a transaction
+   * @param tpc - TransactionablePrismaClient instance for transaction management, optional
    * @returns true if the championship exists, false otherwise
    */
-  private async championshipExistsT(
+  private async championshipExists(
     slug: string,
-    prisma: TransactionPrismaClient
+    tpc?: TransactionablePrismaClient
   ): Promise<boolean> {
-    return !!(await prisma.championship.findUnique({ where: { slug } }))
+    const exists = await this.prismaService
+      .checkTransaction(tpc)
+      .championship.findUnique({ where: { slug } })
+
+    return !!exists
   }
 
   /**
@@ -177,10 +181,10 @@ export class ChampionshipService {
     countrySlug?: string
   ): Promise<void> {
     await this.prismaService.$transaction(async prisma => {
-      if (await this.championshipExistsT(slug, prisma))
+      if (await this.championshipExists(slug, prisma))
         throw new ChampionshipAlreadyExistsException()
 
-      if (countrySlug && !(await this.countryService.countryExistsT(countrySlug, prisma)))
+      if (countrySlug && !(await this.countryService.countryExists(countrySlug, prisma)))
         throw new CountryNotFoundException()
 
       await prisma.championship.create({
