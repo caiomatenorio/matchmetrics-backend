@@ -67,6 +67,12 @@ export class AuthService {
     return false
   }
 
+  /**
+   * Get the user information from the refresh token
+   * @param refreshToken - The refresh token to get the user information from
+   * @param tpc - TransactionablePrismaClient for transaction management, required because this method needs to be atomic as it checks the disponibility of the refresh token and gets the user information in a single transaction
+   * @returns id, email, and role of the user
+   */
   private async getUserInfoFromRefreshToken(
     refreshToken: string,
     tpc: TransactionablePrismaClient
