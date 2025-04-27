@@ -46,4 +46,16 @@ export class RegionService {
       })
     })
   }
+
+  async deleteRegion(slug: string): Promise<void> {
+    await this.prismaService.$transaction(async tpc => {
+      const region = await this.prismaService
+        .checkTransaction(tpc)
+        .region.findUnique({ where: { slug } })
+
+      if (!region) throw new RegionNotFoundException()
+
+      await this.prismaService.checkTransaction(tpc).region.delete({ where: { slug } })
+    })
+  }
 }

@@ -47,3 +47,7 @@ export const updateRegionSchema = z.object({
 })
 
 export type UpdateRegionBody = z.infer<typeof updateRegionSchema>
+
+export const deleteRegionParamsSchema = updateRegionParamsSchema
+
+export type DeleteRegionParams = z.infer<typeof deleteRegionParamsSchema>
