@@ -308,4 +308,12 @@ export class ChampionshipService {
       })
     })
   }
+
+  async deleteChampionship(slug: string): Promise<void> {
+    await this.prismaService.$transaction(async tpc => {
+      if (!(await this.championshipExists(slug, tpc))) throw new ChampionshipNotFoundException()
+
+      await this.prismaService.checkTransaction(tpc).championship.delete({ where: { slug } })
+    })
+  }
 }

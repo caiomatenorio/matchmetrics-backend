@@ -75,3 +75,7 @@ export const updateChampionshipSchema = z.object({
 })
 
 export type UpdateChampionshipBody = z.infer<typeof updateChampionshipSchema>
+
+export const deleteChampionshipParamsSchema = getChampionshipBySlugParamsSchema
+
+export type DeleteChampionshipParams = z.infer<typeof deleteChampionshipParamsSchema>

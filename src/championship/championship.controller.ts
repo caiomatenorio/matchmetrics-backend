@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -36,6 +37,8 @@ import {
   updateChampionshipSchema,
   UpdateChampionshipParams,
   updateChampionshipParamsSchema,
+  DeleteChampionshipParams,
+  deleteChampionshipParamsSchema,
 } from './championship.schema'
 import { Request } from 'express'
 import { AdminOnly, Public } from 'src/auth/auth.decorator'
@@ -115,5 +118,17 @@ export class ChampionshipController {
     return new SuccessResponseBody(HttpStatus.OK, 'Championship updated successfully')
   }
 
-  async deleteChampionship() {}
+  @AdminOnly()
+  @Delete(':slug')
+  @UsePipes(new ZodValidationPipe(deleteChampionshipParamsSchema))
+  @HttpCode(HttpStatus.OK)
+  async deleteChampionship(
+    @Param() params: DeleteChampionshipParams
+  ): Promise<NoDataSuccessResponseBody> {
+    const { slug } = params
+
+    await this.championshipsService.deleteChampionship(slug)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Championship deleted successfully')
+  }
 }
