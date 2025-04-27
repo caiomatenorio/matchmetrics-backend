@@ -1,7 +1,14 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UsePipes } from '@nestjs/common'
+import { Body, Controller, HttpCode, HttpStatus, Param, Post, Put, UsePipes } from '@nestjs/common'
 import { AdminOnly } from 'src/auth/auth.decorator'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
-import { CreateRegionBody, createRegionSchema } from './region.schema'
+import {
+  CreateRegionBody,
+  createRegionSchema,
+  UpdateRegionBody,
+  UpdateRegionParams,
+  updateRegionParamsSchema,
+  updateRegionSchema,
+} from './region.schema'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
 } from 'src/common/response-bodies/success-response-body'
@@ -23,7 +30,20 @@ export class RegionController {
     return new SuccessResponseBody(HttpStatus.CREATED, 'Region created successfully')
   }
 
-  async updateRegion() {}
+  @AdminOnly()
+  @Put(':slug')
+  @HttpCode(HttpStatus.OK)
+  async updateRegion(
+    @Param(new ZodValidationPipe(updateRegionParamsSchema)) params: UpdateRegionParams,
+    @Body(new ZodValidationPipe(updateRegionSchema)) body: UpdateRegionBody
+  ): Promise<NoDataSuccessResponseBody> {
+    const { slug } = params
+    const { name, newSlug, flag } = body
+
+    await this.regionService.updateRegion(slug, name, newSlug, flag)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Region updated successfully')
+  }
 
   async deleteRegion() {}
 }
