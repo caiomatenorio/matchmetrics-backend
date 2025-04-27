@@ -7,8 +7,9 @@ import { ChampionshipModule } from './championship/championship.module'
 import { AdminModule } from './admin/admin.module'
 import { ConfigModule } from '@nestjs/config'
 import { EnvModule } from './env/env.module'
-import { CountryModule } from './country/country.module'
-import { TeamModule } from './team/team.module';
+import { RegionModule } from './region/region.module'
+import { TeamModule } from './team/team.module'
+import { MatchModule } from './match/match.module'
 
 @Module({
   imports: [
@@ -20,8 +21,9 @@ import { TeamModule } from './team/team.module';
     AdminModule,
     EnvModule,
     ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env'] }),
-    CountryModule,
+    RegionModule,
     TeamModule,
+    MatchModule,
   ],
 })
 export class AppModule {}

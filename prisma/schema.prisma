@@ -34,36 +34,31 @@ model Session {
 }
 
 model Championship {
-    id                 String   @id @default(cuid())
+    id                 String  @id @default(cuid())
     name               String
-    slug               String   @unique
+    slug               String  @unique
     season             String
-    country            Country? @relation(fields: [countrySlug], references: [slug], onDelete: NoAction)
-    countrySlug        String?
-    teams              Team[]
+    region             Region? @relation(fields: [regionSlug], references: [slug], onDelete: NoAction)
+    regionSlug         String? @map("countrySlug")
     usersThatFavorited User[]
     matches            Match[]
 }
 
-model Country {
+model Region {
     id            String         @id @default(cuid())
     name          String         @unique
     slug          String         @unique
     flag          String
     championships Championship[]
-    teams         Team[]
 }
 
 model Team {
-    id            String         @id @default(cuid())
-    name          String         @unique
-    slug          String         @unique
-    shield        String
-    country       Country        @relation(fields: [countrySlug], references: [slug], onDelete: NoAction)
-    countrySlug   String
-    homeMatches   Match[]        @relation("HomeTeam")
-    awayMatches   Match[]        @relation("AwayTeam")
-    championships Championship[]
+    id          String  @id @default(cuid())
+    name        String  @unique
+    slug        String  @unique
+    shield      String
+    homeMatches Match[] @relation("HomeTeam")
+    awayMatches Match[] @relation("AwayTeam")
 }
 
 model Match {

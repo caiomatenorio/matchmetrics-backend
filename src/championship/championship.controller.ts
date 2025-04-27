@@ -12,10 +12,9 @@ import {
 } from '@nestjs/common'
 import {
   ChampionshipService,
-  ChampionshipWithCountry,
-  ChampionshipWithFavoritedStatus,
+  ChampionshipWithRegion,
+  ChampionshipWithCountryAndFavoritedStatus,
   MatchWithTeams,
-  TeamWithCountry,
 } from './championship.service'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
@@ -32,10 +31,6 @@ import {
   getChampionshipMatchesQuerySchema,
   GetChampionshipsQuery,
   getChampionshipsQuerySchema,
-  GetChampionshipTeamsParams,
-  getChampionshipTeamsParamsSchema,
-  GetChampionshipTeamsQuery,
-  getChampionshipTeamsQuerySchema,
 } from './championship.schema'
 import { Request } from 'express'
 import { AdminOnly, Public } from 'src/auth/auth.decorator'
@@ -51,7 +46,7 @@ export class ChampionshipController {
   async getAllChampionships(
     @Req() request: Request,
     @Query() query: GetChampionshipsQuery
-  ): Promise<SuccessResponseBody<ChampionshipWithFavoritedStatus[]>> {
+  ): Promise<SuccessResponseBody<ChampionshipWithCountryAndFavoritedStatus[]>> {
     const championships = await this.championshipsService.getAllChampionships(request, query)
 
     return new SuccessResponseBody(
@@ -67,23 +62,10 @@ export class ChampionshipController {
   @HttpCode(HttpStatus.OK)
   async getChampionshipBySlug(
     @Param() params: GetChampionshipBySlugParams
-  ): Promise<SuccessResponseBody<ChampionshipWithCountry>> {
+  ): Promise<SuccessResponseBody<ChampionshipWithRegion>> {
     const championship = await this.championshipsService.getChampionshipBySlug(params.slug)
 
     return new SuccessResponseBody(HttpStatus.OK, 'Championship fetched successfully', championship)
-  }
-
-  @Public()
-  @Get('/:slug/teams')
-  @HttpCode(HttpStatus.OK)
-  async getChampionshipTeams(
-    @Param(new ZodValidationPipe(getChampionshipTeamsParamsSchema))
-    params: GetChampionshipTeamsParams,
-    @Query(new ZodValidationPipe(getChampionshipTeamsQuerySchema)) query: GetChampionshipTeamsQuery
-  ): Promise<SuccessResponseBody<TeamWithCountry[]>> {
-    const teams = await this.championshipsService.getChampionshipTeams(params.slug, query)
-
-    return new SuccessResponseBody(HttpStatus.OK, 'Teams fetched successfully', teams)
   }
 
   @Public()
@@ -112,4 +94,8 @@ export class ChampionshipController {
 
     return new SuccessResponseBody(HttpStatus.CREATED, 'Championship created successfully')
   }
+
+  async updateChampionship() {}
+
+  async deleteChampionship() {}
 }
