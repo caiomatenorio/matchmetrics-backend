@@ -294,6 +294,9 @@ export class ChampionshipService {
 
       if (!championship) throw new ChampionshipNotFoundException()
 
+      if (newSlug && newSlug !== slug && (await this.championshipExists(newSlug, tpc)))
+        throw new ChampionshipSlugAlreadyInUseException()
+
       if (regionSlug && !(await this.regionService.regionExists(regionSlug, tpc)))
         throw new RegionNotFoundException()
 
