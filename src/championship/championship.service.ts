@@ -6,7 +6,7 @@ import { AuthService } from 'src/auth/auth.service'
 import { Request } from 'express'
 import ParameterRequiresAuthException from 'src/common/exceptions/parameter-requires-auth.exception'
 import ChampionshipNotFoundException from 'src/common/exceptions/championship-not-found.exception'
-import ChampionshipAlreadyExistsException from 'src/common/exceptions/championship-already-exists.exception'
+import ChampionshipSlugAlreadyInUseException from 'src/common/exceptions/championship-slug-already-in-use.exception'
 import RegionNotFoundException from 'src/common/exceptions/country-not-found.exception'
 import TransactionablePrismaClient from 'src/common/util/transaction-prisma-client'
 import { RegionService } from 'src/region/region.service'
@@ -263,7 +263,8 @@ export class ChampionshipService {
     regionSlug: string
   ): Promise<void> {
     await this.prismaService.$transaction(async tpc => {
-      if (await this.championshipExists(slug, tpc)) throw new ChampionshipAlreadyExistsException()
+      if (await this.championshipExists(slug, tpc))
+        throw new ChampionshipSlugAlreadyInUseException()
 
       if (!(await this.regionService.regionExists(regionSlug, tpc)))
         throw new RegionNotFoundException()
