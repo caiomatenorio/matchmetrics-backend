@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   Req,
   UsePipes,
@@ -31,6 +32,10 @@ import {
   getChampionshipMatchesQuerySchema,
   GetChampionshipsQuery,
   getChampionshipsQuerySchema,
+  UpdateChampionshipBody,
+  updateChampionshipSchema,
+  UpdateChampionshipParams,
+  updateChampionshipParamsSchema,
 } from './championship.schema'
 import { Request } from 'express'
 import { AdminOnly, Public } from 'src/auth/auth.decorator'
@@ -95,7 +100,20 @@ export class ChampionshipController {
     return new SuccessResponseBody(HttpStatus.CREATED, 'Championship created successfully')
   }
 
-  async updateChampionship() {}
+  @AdminOnly()
+  @Put(':slug')
+  @HttpCode(HttpStatus.OK)
+  async updateChampionship(
+    @Param(new ZodValidationPipe(updateChampionshipParamsSchema)) params: UpdateChampionshipParams,
+    @Body(new ZodValidationPipe(updateChampionshipSchema)) body: UpdateChampionshipBody
+  ): Promise<NoDataSuccessResponseBody> {
+    const { slug } = params
+    const { name, newSlug, season, regionSlug } = body
+
+    await this.championshipsService.updateChampionship(slug, name, newSlug, season, regionSlug)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Championship updated successfully')
+  }
 
   async deleteChampionship() {}
 }

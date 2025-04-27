@@ -48,8 +48,10 @@ export class ChampionshipService {
   ): ChampionshipWithCountryAndUsersThatFavorited[] {
     return championships.filter(championship => {
       try {
-        const seasonStart = championship.season.split('-')[0] // Get the first part of the season (YYYY)
-        const seasonEnd = championship.season.split('-')[1] ?? championship.season.split('-')[0] // Get the second part of the season (YYYY) or use the first part if it doesn't exist
+        // Get the first part of the season (YYYY)
+        const seasonStart = championship.season.split('-')[0]
+        // Get the second part of the season (YYYY) or use the first part if it doesn't exist
+        const seasonEnd = championship.season.split('-')[1] ?? championship.season.split('-')[0]
 
         return year >= parseInt(seasonStart) && year <= parseInt(seasonEnd)
       } catch {
@@ -117,26 +119,27 @@ export class ChampionshipService {
   ): Promise<ChampionshipWithCountryAndFavoritedStatus[]> {
     const { search, year, regionSlug, favorited, page } = query
 
-    let championships = await this.prismaService.championship.findMany({
-      where: {
-        name: { contains: search, mode: 'insensitive' }, // Case insensitive search by name
-        region: regionSlug ? { slug: regionSlug } : undefined, // Filter by country slug
-      },
+    let championships: ChampionshipWithCountryAndUsersThatFavorited[] =
+      await this.prismaService.championship.findMany({
+        where: {
+          name: { contains: search, mode: 'insensitive' }, // Case insensitive search by name
+          region: regionSlug ? { slug: regionSlug } : undefined, // Filter by country slug
+        },
 
-      omit: { regionSlug: true }, // Omit the countrySlug field
+        omit: { regionSlug: true }, // Omit the countrySlug field
 
-      // Include ids of users that favorited the championship and country details
-      include: {
-        usersThatFavorited: { select: { id: true } },
-        region: true,
-      },
+        // Include ids of users that favorited the championship and country details
+        include: {
+          usersThatFavorited: { select: { id: true } },
+          region: true,
+        },
 
-      // Pagination
-      take: page ? 10 : undefined,
-      skip: page ? (page - 1) * 10 : undefined,
+        // Pagination
+        take: page ? 10 : undefined,
+        skip: page ? (page - 1) * 10 : undefined,
 
-      orderBy: { name: 'asc' }, // Order by name in ascending order
-    })
+        orderBy: { name: 'asc' }, // Order by name in ascending order
+      })
 
     if (year) championships = this.filterChampionshipsByYear(championships, year)
 
@@ -191,38 +194,6 @@ export class ChampionshipService {
   }
 
   /**
-   * Create a new championship. If a country slug is provided, it will connect the championship to the country.
-   * @param name - Name of the championship
-   * @param slug - Slug of the championship, must be unique
-   * @param season - Season of the championship (e.g., '2023-2024' or '2023')
-   * @param countrySlug - Slug of the country to connect the championship to (optional)
-   * @throws ChampionshipAlreadyExistsException if the championship already exists
-   * @throws CountryNotFoundException if the country slug is provided but the country does not exist
-   */
-  async createChampionship(
-    name: string,
-    slug: string,
-    season: string,
-    regionSlug?: string
-  ): Promise<void> {
-    await this.prismaService.$transaction(async tpc => {
-      if (await this.championshipExists(slug, tpc)) throw new ChampionshipAlreadyExistsException()
-
-      if (regionSlug && !(await this.regionService.regionExists(regionSlug, tpc)))
-        throw new RegionNotFoundException()
-
-      await tpc.championship.create({
-        data: {
-          name,
-          slug,
-          season,
-          region: regionSlug ? { connect: { slug: regionSlug } } : undefined, // Connect to country if provided
-        },
-      })
-    })
-  }
-
-  /**
    * Get all matches in a championship, optionally filtered by search term and date range.
    * @param championshipSlug - Slug of the championship
    * @param query - Query parameters for filtering matches
@@ -274,5 +245,67 @@ export class ChampionshipService {
     if (!matches) throw new ChampionshipNotFoundException()
 
     return matches
+  }
+
+  /**
+   * Create a new championship. If a country slug is provided, it will connect the championship to the country.
+   * @param name - Name of the championship
+   * @param slug - Slug of the championship, must be unique
+   * @param season - Season of the championship (e.g., '2023-2024' or '2023')
+   * @param countrySlug - Slug of the country to connect the championship to (optional)
+   * @throws ChampionshipAlreadyExistsException if the championship already exists
+   * @throws CountryNotFoundException if the country slug is provided but the country does not exist
+   */
+  async createChampionship(
+    name: string,
+    slug: string,
+    season: string,
+    regionSlug: string
+  ): Promise<void> {
+    await this.prismaService.$transaction(async tpc => {
+      if (await this.championshipExists(slug, tpc)) throw new ChampionshipAlreadyExistsException()
+
+      if (!(await this.regionService.regionExists(regionSlug, tpc)))
+        throw new RegionNotFoundException()
+
+      await tpc.championship.create({
+        data: {
+          name,
+          slug,
+          season,
+          region: { connect: { slug: regionSlug } },
+        },
+      })
+    })
+  }
+
+  async updateChampionship(
+    slug: string,
+    name?: string,
+    newSlug?: string,
+    season?: string,
+    regionSlug?: string
+  ): Promise<void> {
+    await this.prismaService.$transaction(async tpc => {
+      const championship = await this.prismaService
+        .checkTransaction(tpc)
+        .championship.findUnique({ where: { slug } })
+
+      if (!championship) throw new ChampionshipNotFoundException()
+
+      if (regionSlug && !(await this.regionService.regionExists(regionSlug, tpc)))
+        throw new RegionNotFoundException()
+
+      await this.prismaService.checkTransaction(tpc).championship.update({
+        where: { slug },
+
+        data: {
+          name,
+          slug: newSlug,
+          season,
+          region: regionSlug ? { connect: { slug: regionSlug } } : undefined,
+        },
+      })
+    })
   }
 }

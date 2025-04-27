@@ -38,8 +38,8 @@ model Championship {
     name               String
     slug               String  @unique
     season             String
-    region             Region? @relation(fields: [regionSlug], references: [slug], onDelete: NoAction)
-    regionSlug         String? @map("countrySlug")
+    region             Region  @relation(fields: [regionSlug], references: [slug], onDelete: NoAction)
+    regionSlug         String  @map("countrySlug")
     usersThatFavorited User[]
     matches            Match[]
 }
