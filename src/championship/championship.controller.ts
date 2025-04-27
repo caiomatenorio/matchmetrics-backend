@@ -89,8 +89,8 @@ export class ChampionshipController {
   async createChampionship(
     @Body() body: CreateChampionshipBody
   ): Promise<NoDataSuccessResponseBody> {
-    const { name, slug, season, countrySlug } = body
-    await this.championshipsService.createChampionship(name, slug, season, countrySlug)
+    const { name, slug, season, regionSlug } = body
+    await this.championshipsService.createChampionship(name, slug, season, regionSlug)
 
     return new SuccessResponseBody(HttpStatus.CREATED, 'Championship created successfully')
   }

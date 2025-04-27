@@ -43,6 +43,6 @@ export const createChampionshipSchema = z.object({
       'Slug must be lowercase and can only contain letters, numbers, and dashes'
     ),
   season: z.string().regex(/^\d{4}(-\d{4})?$/, 'Season must be in the format YYYY or YYYY-YYYY'),
-  countrySlug: z.string().optional(),
+  regionSlug: z.string().optional(),
 })
 export type CreateChampionshipBody = z.infer<typeof createChampionshipSchema>
