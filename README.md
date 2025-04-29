@@ -6,6 +6,18 @@
 
 ## Endpoints
 
+### DELETE /users
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: DELETE
+- URL: /users/me
+- Autenticação: Autenticada
+- Body:
+  - password: string (a senha do usuário atual)
+
 ## Tipos de erro
 
 ### E000 - UNKNOWN
