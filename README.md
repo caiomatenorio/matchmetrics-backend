@@ -17,6 +17,71 @@
 - Autenticação: Autenticada
 - Body:
   - password: string (a senha do usuário atual)
+ 
+#### Respostas
+
+### POST /admin/promote-user/:email
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: POST
+- URL: /admin/promote-user/email
+- Autenticação: Administrador
+- Parametro:
+  - email: string (e-mail do usuário)
+  - password: string (senha do usuário)
+ 
+#### Respostas
+
+### POST /log-in
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Metódo HTTP: POST
+- URL: /log-in
+- Autenticação: Público
+- Body:
+  - e-mail: string (e-mail do usuário invalida)
+  - password: string (senha do usuário invalida)
+
+#### Respostas
+
+### GET /auth/status
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: GET
+- URL: /auth/status
+- Autenticação: Público
+
+#### Respostas
+
+### GET /whoami
+
+#### Descrição
+
+#### Exemplo de requisição
+- Método HTTP: GET
+- URL: /whoami
+- Autenticação: Autenticada
+
+#### Respostas
+
+### POST /log-out
+#### Descrição
+
+#### Exemplo de requisição
+- Método HTTP: POST
+- URL: /log-out
+- Autenticação: Autenticada
+
+#### Respostas
 
 ## Tipos de erro
 
