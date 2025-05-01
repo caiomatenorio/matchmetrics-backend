@@ -6,7 +6,7 @@
 
 ## Endpoints
 
-### DELETE /users
+### - DELETE /users
 
 #### Descrição
 
@@ -20,7 +20,7 @@
  
 #### Respostas
 
-### POST /admin/promote-user/:email
+### - POST /admin/promote-user/:email
 
 #### Descrição
 
@@ -35,7 +35,7 @@
  
 #### Respostas
 
-### POST /log-in
+### - POST /log-in
 
 #### Descrição
 
@@ -50,7 +50,7 @@
 
 #### Respostas
 
-### GET /auth/status
+### - GET /auth/status
 
 #### Descrição
 
@@ -62,7 +62,7 @@
 
 #### Respostas
 
-### GET /whoami
+### - GET /whoami
 
 #### Descrição
 
@@ -73,13 +73,112 @@
 
 #### Respostas
 
-### POST /log-out
+### - POST /log-out
+
 #### Descrição
 
 #### Exemplo de requisição
 - Método HTTP: POST
 - URL: /log-out
 - Autenticação: Autenticada
+
+### - POST /sign-up
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: POST
+- Autenticação: Público
+- URL: /sign-up
+- Body:
+   - e-mail: string (e-mail do usuário)
+   - password: string (minimo de 8 caracteres, máximo de 25 caracteres e deve conter uma letra maiuscula, uma letra minuscula, e um       caracter especial)
+
+#### Respostas
+
+### - GET /championship
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: GET
+- Autenticação: Público
+- URL: /championship
+- Queries:
+   - search: string (Nome do campeonato que vai ser pesquisado pelo usuário.)
+   - year: number (Ano do campeonato que vai ser pesquisado pelo usuário.)
+   - country: string (País do campeonato que vai ser pesquisado pelo usuário.)
+   - favorited: enum (Se o campeonato pesquisado é ou não favorito do usuário.)
+   - page: number (Página onde o campeonato pesquisado pelo o usuário está.)
+ 
+#### Respostas
+
+### - GET /championship/:slug
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: GET
+- Autenticação: Público
+- URL: /championship/:slug/
+- Parametros:
+  - slug: string
+
+#### Respostas
+
+### GET championship/:slug/teams
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: GET
+- Autenticação: Público
+- URL: championship/:slug/teams
+- Parametros:
+  - slug: string
+- Queries:
+  - search: string (time que vai ser pesquisado pelo usuário.)
+  - page: string (Página onde o time que vai ser pesquisado pelo usuário está.)
+
+#### Respostas
+
+### GET championship/:slug/matches
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: GET
+- Autenticação: Público
+- URL: championship/:slug/matches
+- Parametros:
+  - slug: string
+- Queries:
+  - search: string (Nome dos dois times que estão na partida que o usuário deseja encontrar.)
+  - minDate: date (Data minima para a partida desejada pelo usuário ter acontecido.)
+  - maxDate: date (Data máxima para a partida desejada pelo usuário ter acontecido.)
+  - page: number (Página que a partida desejada pelo usuário está)
+
+#### Respostas
+
+### POST /championship
+
+#### Descrição
+
+#### Exemplo de requisição
+
+- Método HTTP: POST
+- Autenticação: administrador
+- URL: /championship
+- Body:
+ - name: string (Nome do campeonato que vai ser criado. Minimo de 3 letras e máximo de 25)
+ - slug: string
+ - season: string (Temporada do campeonato que vai ser criado. Pode ser escrito em "YYYY" ou "YYYY-YYYY". Exemplo: 2023 ou 2023-2024)
+ - countryslug: string (País do campeonato que vai ser criado.)
 
 #### Respostas
 
