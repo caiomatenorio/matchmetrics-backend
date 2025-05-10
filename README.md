@@ -45,8 +45,8 @@
 - URL: /log-in
 - Autenticação: Público
 - Body:
-  - e-mail: string (e-mail do usuário invalida)
-  - password: string (senha do usuário invalida)
+  - e-mail: string (e-mail do usuário inválido)
+  - password: string (senha do usuário inválido)
 
 #### Respostas
 
