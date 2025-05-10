@@ -27,7 +27,7 @@
 #### Exemplo de requisição
 
 - Método HTTP: POST
-- URL: /admin/promote-user/email
+- URL: /admin/promote-user/:email
 - Autenticação: Administrador
 - Parametro:
   - email: string (e-mail do usuário)
