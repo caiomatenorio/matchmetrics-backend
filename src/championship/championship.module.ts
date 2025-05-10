@@ -2,10 +2,11 @@ import { Module } from '@nestjs/common'
 import { AuthModule } from 'src/auth/auth.module'
 import { PrismaModule } from 'src/prisma/prisma.module'
 import { ChampionshipService } from './championship.service'
-import { RegionService } from 'src/region/region.service'
+import { RegionModule } from 'src/region/region.module'
 
 @Module({
-  imports: [PrismaModule, AuthModule, RegionService],
+  imports: [PrismaModule, AuthModule, RegionModule],
   providers: [ChampionshipService],
+  exports: [ChampionshipService],
 })
 export class ChampionshipModule {}

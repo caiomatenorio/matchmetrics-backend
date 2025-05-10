@@ -7,7 +7,7 @@ import { Request } from 'express'
 import ParameterRequiresAuthException from 'src/common/exceptions/parameter-requires-auth.exception'
 import ChampionshipNotFoundException from 'src/common/exceptions/championship-not-found.exception'
 import ChampionshipSlugAlreadyInUseException from 'src/common/exceptions/championship-slug-already-in-use.exception'
-import RegionNotFoundException from 'src/common/exceptions/country-not-found.exception'
+import RegionNotFoundException from 'src/common/exceptions/region-not-found.exception'
 import TransactionablePrismaClient from 'src/common/util/transaction-prisma-client'
 import { RegionService } from 'src/region/region.service'
 
@@ -181,10 +181,7 @@ export class ChampionshipService {
    * @param tpc - TransactionablePrismaClient instance for transaction management, optional
    * @returns true if the championship exists, false otherwise
    */
-  private async championshipExists(
-    slug: string,
-    tpc?: TransactionablePrismaClient
-  ): Promise<boolean> {
+  async championshipExists(slug: string, tpc?: TransactionablePrismaClient): Promise<boolean> {
     const exists = await this.prismaService.checkTransaction(tpc).championship.findUnique({
       where: { slug },
       select: { id: true }, // Select only the id field to check existence
