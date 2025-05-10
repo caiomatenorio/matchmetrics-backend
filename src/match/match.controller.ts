@@ -1,10 +1,18 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UsePipes } from '@nestjs/common'
+import { Body, Controller, HttpCode, HttpStatus, Param, Post, Put, UsePipes } from '@nestjs/common'
 import { MatchService } from './match.service'
 import { AdminOnly } from 'src/auth/auth.decorator'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
-import { CreateMatchBody, createMatchSchema } from './match.schema'
-import { CreateTeamBody } from 'src/team/team.schema'
-import SuccessResponseBody from 'src/common/response-bodies/success-response-body'
+import {
+  CreateMatchBody,
+  createMatchSchema,
+  UpdateMatchBody,
+  UpdateMatchParams,
+  updateMatchParamsSchema,
+  updateMatchSchema,
+} from './match.schema'
+import SuccessResponseBody, {
+  NoDataSuccessResponseBody,
+} from 'src/common/response-bodies/success-response-body'
 
 @Controller('match')
 export class MatchController {
@@ -20,5 +28,19 @@ export class MatchController {
     const data = await this.matchService.createMatch(championshipSlug, homeTeam, awayTeam, date)
 
     return new SuccessResponseBody(HttpStatus.CREATED, 'Match created successfully', data)
+  }
+
+  @AdminOnly()
+  @Put(':id')
+  @HttpCode(HttpStatus.OK)
+  async updateMatch(
+    @Param(new ZodValidationPipe(updateMatchParamsSchema)) params: UpdateMatchParams,
+    @Body(new ZodValidationPipe(updateMatchSchema)) body: UpdateMatchBody
+  ): Promise<NoDataSuccessResponseBody> {
+    const { championshipSlug, homeTeam, awayTeam, date } = body
+
+    await this.matchService.updateMatch(params.id, championshipSlug, homeTeam, awayTeam, date)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Match updated successfully')
   }
 }

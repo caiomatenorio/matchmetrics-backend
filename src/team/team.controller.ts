@@ -30,7 +30,7 @@ export class TeamController {
   constructor(private readonly teamService: TeamService) {}
 
   @AdminOnly()
-  @Post('')
+  @Post()
   @UsePipes(new ZodValidationPipe(createTeamSchema))
   @HttpCode(HttpStatus.CREATED)
   async createTeam(@Body() body: CreateTeamBody): Promise<NoDataSuccessResponseBody> {

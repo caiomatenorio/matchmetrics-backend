@@ -15,6 +15,7 @@ enum ErrorCode {
   REGION_SLUG_ALREADY_IN_USE = 'E013',
   TEAM_NOT_FOUND = 'E014',
   TEAM_SLUG_ALREADY_IN_USE = 'E015',
+  MATCH_NOT_FOUND = 'E016',
 }
 
 export default ErrorCode
