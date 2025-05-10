@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import RegionNotFoundException from 'src/common/exceptions/country-not-found.exception'
+import RegionNotFoundException from 'src/common/exceptions/region-not-found.exception'
 import RegionSlugAlreadyInUseException from 'src/common/exceptions/region-slug-already-in-use.exception'
 import TransactionablePrismaClient from 'src/common/util/transaction-prisma-client'
 import { PrismaService } from 'src/prisma/prisma.service'
