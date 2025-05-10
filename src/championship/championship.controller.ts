@@ -1,21 +1,22 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   Req,
   UsePipes,
 } from '@nestjs/common'
 import {
   ChampionshipService,
-  ChampionshipWithCountry,
-  ChampionshipWithFavoritedStatus,
+  ChampionshipWithRegion,
+  ChampionshipWithCountryAndFavoritedStatus,
   MatchWithTeams,
-  TeamWithCountry,
 } from './championship.service'
 import SuccessResponseBody, {
   NoDataSuccessResponseBody,
@@ -32,10 +33,12 @@ import {
   getChampionshipMatchesQuerySchema,
   GetChampionshipsQuery,
   getChampionshipsQuerySchema,
-  GetChampionshipTeamsParams,
-  getChampionshipTeamsParamsSchema,
-  GetChampionshipTeamsQuery,
-  getChampionshipTeamsQuerySchema,
+  UpdateChampionshipBody,
+  updateChampionshipSchema,
+  UpdateChampionshipParams,
+  updateChampionshipParamsSchema,
+  DeleteChampionshipParams,
+  deleteChampionshipParamsSchema,
 } from './championship.schema'
 import { Request } from 'express'
 import { AdminOnly, Public } from 'src/auth/auth.decorator'
@@ -51,7 +54,7 @@ export class ChampionshipController {
   async getAllChampionships(
     @Req() request: Request,
     @Query() query: GetChampionshipsQuery
-  ): Promise<SuccessResponseBody<ChampionshipWithFavoritedStatus[]>> {
+  ): Promise<SuccessResponseBody<ChampionshipWithCountryAndFavoritedStatus[]>> {
     const championships = await this.championshipsService.getAllChampionships(request, query)
 
     return new SuccessResponseBody(
@@ -67,23 +70,10 @@ export class ChampionshipController {
   @HttpCode(HttpStatus.OK)
   async getChampionshipBySlug(
     @Param() params: GetChampionshipBySlugParams
-  ): Promise<SuccessResponseBody<ChampionshipWithCountry>> {
+  ): Promise<SuccessResponseBody<ChampionshipWithRegion>> {
     const championship = await this.championshipsService.getChampionshipBySlug(params.slug)
 
     return new SuccessResponseBody(HttpStatus.OK, 'Championship fetched successfully', championship)
-  }
-
-  @Public()
-  @Get('/:slug/teams')
-  @HttpCode(HttpStatus.OK)
-  async getChampionshipTeams(
-    @Param(new ZodValidationPipe(getChampionshipTeamsParamsSchema))
-    params: GetChampionshipTeamsParams,
-    @Query(new ZodValidationPipe(getChampionshipTeamsQuerySchema)) query: GetChampionshipTeamsQuery
-  ): Promise<SuccessResponseBody<TeamWithCountry[]>> {
-    const teams = await this.championshipsService.getChampionshipTeams(params.slug, query)
-
-    return new SuccessResponseBody(HttpStatus.OK, 'Teams fetched successfully', teams)
   }
 
   @Public()
@@ -107,9 +97,38 @@ export class ChampionshipController {
   async createChampionship(
     @Body() body: CreateChampionshipBody
   ): Promise<NoDataSuccessResponseBody> {
-    const { name, slug, season, countrySlug } = body
-    await this.championshipsService.createChampionship(name, slug, season, countrySlug)
+    const { name, slug, season, regionSlug } = body
+    await this.championshipsService.createChampionship(name, slug, season, regionSlug)
 
     return new SuccessResponseBody(HttpStatus.CREATED, 'Championship created successfully')
+  }
+
+  @AdminOnly()
+  @Put(':slug')
+  @HttpCode(HttpStatus.OK)
+  async updateChampionship(
+    @Param(new ZodValidationPipe(updateChampionshipParamsSchema)) params: UpdateChampionshipParams,
+    @Body(new ZodValidationPipe(updateChampionshipSchema)) body: UpdateChampionshipBody
+  ): Promise<NoDataSuccessResponseBody> {
+    const { slug } = params
+    const { name, newSlug, season, regionSlug } = body
+
+    await this.championshipsService.updateChampionship(slug, name, newSlug, season, regionSlug)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Championship updated successfully')
+  }
+
+  @AdminOnly()
+  @Delete(':slug')
+  @UsePipes(new ZodValidationPipe(deleteChampionshipParamsSchema))
+  @HttpCode(HttpStatus.OK)
+  async deleteChampionship(
+    @Param() params: DeleteChampionshipParams
+  ): Promise<NoDataSuccessResponseBody> {
+    const { slug } = params
+
+    await this.championshipsService.deleteChampionship(slug)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Championship deleted successfully')
   }
 }

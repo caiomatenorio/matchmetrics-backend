@@ -1,82 +1,77 @@
 generator client {
-    provider = "prisma-client-js"
-    output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
-    USER
-    ADMIN
+  USER
+  ADMIN
 }
 
 model User {
-    id                    String         @id @default(cuid())
-    email                 String         @unique
-    password              String
-    role                  Role           @default(USER)
-    createdAt             DateTime       @default(now())
-    sessions              Session[]
-    favoriteChampionships Championship[]
+  id                    String         @id @default(cuid())
+  email                 String         @unique
+  password              String
+  role                  Role           @default(USER)
+  createdAt             DateTime       @default(now())
+  sessions              Session[]
+  favoriteChampionships Championship[]
 }
 
 model Session {
-    id           String   @id @default(cuid())
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId       String
-    refreshToken String   @unique
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
-    expiresAt    DateTime
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  refreshToken String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  expiresAt    DateTime
 }
 
 model Championship {
-    id                 String   @id @default(cuid())
-    name               String
-    slug               String   @unique
-    season             String
-    country            Country? @relation(fields: [countrySlug], references: [slug], onDelete: NoAction)
-    countrySlug        String?
-    teams              Team[]
-    usersThatFavorited User[]
-    matches            Match[]
+  id                 String  @id @default(cuid())
+  name               String
+  slug               String  @unique
+  season             String
+  region             Region  @relation(fields: [regionSlug], references: [slug], onDelete: NoAction)
+  regionSlug         String
+  usersThatFavorited User[]
+  matches            Match[]
 }
 
-model Country {
-    id            String         @id @default(cuid())
-    name          String         @unique
-    slug          String         @unique
-    flag          String
-    championships Championship[]
-    teams         Team[]
+model Region {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  slug          String         @unique
+  flag          String
+  championships Championship[]
 }
 
 model Team {
-    id            String         @id @default(cuid())
-    name          String         @unique
-    slug          String         @unique
-    shield        String
-    country       Country        @relation(fields: [countrySlug], references: [slug], onDelete: NoAction)
-    countrySlug   String
-    homeMatches   Match[]        @relation("HomeTeam")
-    awayMatches   Match[]        @relation("AwayTeam")
-    championships Championship[]
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  shield      String
+  homeMatches Match[] @relation("HomeTeam")
+  awayMatches Match[] @relation("AwayTeam")
 }
 
 model Match {
-    id                String       @id @default(cuid())
-    date              DateTime
-    championship      Championship @relation(fields: [championshipSlug], references: [slug], onDelete: NoAction)
-    championshipSlug  String
-    homeTeam          Team         @relation("HomeTeam", fields: [homeTeamSlug], references: [slug], onDelete: NoAction)
-    homeTeamSlug      String
-    homeTeamGoals     Int
-    homeTeamPenalties Int?
-    awayTeam          Team         @relation("AwayTeam", fields: [awayTeamSlug], references: [slug], onDelete: NoAction)
-    awayTeamSlug      String
-    awayTeamGoals     Int
-    awayTeamPenalties Int?
+  id                String       @id @default(cuid())
+  date              DateTime
+  championship      Championship @relation(fields: [championshipSlug], references: [slug], onDelete: NoAction)
+  championshipSlug  String
+  homeTeam          Team         @relation("HomeTeam", fields: [homeTeamSlug], references: [slug], onDelete: NoAction)
+  homeTeamSlug      String
+  homeTeamGoals     Int
+  homeTeamPenalties Int?
+  awayTeam          Team         @relation("AwayTeam", fields: [awayTeamSlug], references: [slug], onDelete: NoAction)
+  awayTeamSlug      String
+  awayTeamGoals     Int
+  awayTeamPenalties Int?
 }

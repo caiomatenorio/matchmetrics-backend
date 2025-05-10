@@ -2,8 +2,8 @@ import { HttpStatus } from '@nestjs/common'
 import ConventionalHttpException from './conventional-http.exception'
 import ErrorCode from '../util/error-code'
 
-export default class CountryNotFoundException extends ConventionalHttpException {
+export default class TeamSlugAlreadyInUseException extends ConventionalHttpException {
   constructor() {
-    super(HttpStatus.NOT_FOUND, ErrorCode.COUNTRY_NOT_FOUND, 'Country not found')
+    super(HttpStatus.CONFLICT, ErrorCode.TEAM_SLUG_ALREADY_IN_USE, 'Team slug already in use')
   }
 }

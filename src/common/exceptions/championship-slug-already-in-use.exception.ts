@@ -2,12 +2,12 @@ import { HttpStatus } from '@nestjs/common'
 import ConventionalHttpException from './conventional-http.exception'
 import ErrorCode from '../util/error-code'
 
-export default class ChampionshipAlreadyExistsException extends ConventionalHttpException {
+export default class ChampionshipSlugAlreadyInUseException extends ConventionalHttpException {
   constructor() {
     super(
       HttpStatus.CONFLICT,
-      ErrorCode.CHAMPIONSHIP_ALREADY_EXISTS,
-      'Championship with specified slug already exists'
+      ErrorCode.CHAMPIONSHIP_SLUG_ALREADY_IN_USE,
+      'Championship slug already in use'
     )
   }
 }
