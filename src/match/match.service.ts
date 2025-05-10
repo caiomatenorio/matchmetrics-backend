@@ -107,4 +107,12 @@ export class MatchService {
       })
     })
   }
+
+  async deleteMatch(id: string): Promise<void> {
+    this.prismaService.$transaction(async tpc => {
+      if (!(await this.matchExists(id, tpc))) throw new MatchNotFoundException()
+
+      await this.prismaService.checkTransaction(tpc).match.delete({ where: { id } })
+    })
+  }
 }

@@ -87,3 +87,7 @@ export const updateMatchSchema = z.object({
 })
 
 export type UpdateMatchBody = z.infer<typeof updateMatchSchema>
+
+export const deleteMatchParamsSchema = updateMatchParamsSchema
+
+export type DeleteMatchParams = z.infer<typeof deleteMatchParamsSchema>

@@ -1,10 +1,22 @@
-import { Body, Controller, HttpCode, HttpStatus, Param, Post, Put, UsePipes } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  UsePipes,
+} from '@nestjs/common'
 import { MatchService } from './match.service'
 import { AdminOnly } from 'src/auth/auth.decorator'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
 import {
   CreateMatchBody,
   createMatchSchema,
+  DeleteMatchParams,
+  deleteMatchParamsSchema,
   UpdateMatchBody,
   UpdateMatchParams,
   updateMatchParamsSchema,
@@ -42,5 +54,15 @@ export class MatchController {
     await this.matchService.updateMatch(params.id, championshipSlug, homeTeam, awayTeam, date)
 
     return new SuccessResponseBody(HttpStatus.OK, 'Match updated successfully')
+  }
+
+  @AdminOnly()
+  @Delete(':id')
+  @UsePipes(new ZodValidationPipe(deleteMatchParamsSchema))
+  @HttpCode(HttpStatus.OK)
+  async deleteMatch(@Param() params: DeleteMatchParams): Promise<NoDataSuccessResponseBody> {
+    await this.matchService.deleteMatch(params.id)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Match deleted successfully')
   }
 }
