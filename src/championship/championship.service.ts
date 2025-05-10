@@ -166,8 +166,8 @@ export class ChampionshipService {
   async getChampionshipBySlug(slug: string): Promise<ChampionshipWithRegion> {
     const championship = await this.prismaService.championship.findUnique({
       where: { slug }, // Find championship by slug
-      omit: { regionSlug: true }, // Omit the countrySlug field
-      include: { region: true }, // Include country details
+      omit: { regionSlug: true }, // Omit the regionSlug field
+      include: { region: true }, // Include region details
     })
 
     if (!championship) throw new ChampionshipNotFoundException()
