@@ -93,7 +93,7 @@
 - URL: /sign-up
 - Body:
    - e-mail: string (e-mail do usuário)
-   - password: string (minimo de 8 caracteres, máximo de 25 caracteres e deve conter uma letra maiuscula, uma letra minuscula, e um       caracter especial)
+   - password: string (mínimo de 8 caracteres, máximo de 25 caracteres e deve conter uma letra maiúscula, uma letra minúscula, e um       caracter especial)
 
 #### Respostas
 
