@@ -41,7 +41,7 @@
 
 #### Exemplo de requisição
 
-- Metódo HTTP: POST
+- Método HTTP: POST
 - URL: /log-in
 - Autenticação: Público
 - Body:
