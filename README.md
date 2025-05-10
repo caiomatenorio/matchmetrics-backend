@@ -137,7 +137,7 @@
 
 - Método HTTP: GET
 - Autenticação: Público
-- URL: championship/:slug/teams
+- URL: /championship/:slug/teams
 - Parametros:
   - slug: string
 - Queries:
