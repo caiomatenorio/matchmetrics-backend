@@ -154,7 +154,7 @@
 
 - Método HTTP: GET
 - Autenticação: Público
-- URL: championship/:slug/matches
+- URL: /championship/:slug/matches
 - Parametros:
   - slug: string
 - Queries:
