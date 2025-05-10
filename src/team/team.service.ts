@@ -26,13 +26,9 @@ export class TeamService {
 
   async updateTeam(slug: string, name?: string, newSlug?: string, shield?: string): Promise<void> {
     await this.prismaService.$transaction(async tpc => {
-      const team = await this.prismaService
-        .checkTransaction(tpc)
-        .team.findUnique({ where: { slug } })
-
-      if (!team) throw new TeamNotFoundException()
-
-      if (newSlug && (await this.teamExists(newSlug))) throw new TeamSlugAlreadyInUseException()
+      if (!(await this.teamExists(slug, tpc))) throw new TeamNotFoundException()
+      if (newSlug && (await this.teamExists(newSlug, tpc)))
+        throw new TeamSlugAlreadyInUseException()
 
       await this.prismaService.checkTransaction(tpc).team.update({
         where: { slug },
@@ -43,6 +39,14 @@ export class TeamService {
           shield,
         },
       })
+    })
+  }
+
+  async deleteTeam(slug: string): Promise<void> {
+    await this.prismaService.$transaction(async tpc => {
+      if (!(await this.teamExists(slug, tpc))) throw new TeamNotFoundException()
+
+      await this.prismaService.checkTransaction(tpc).team.delete({ where: { slug } })
     })
   }
 }

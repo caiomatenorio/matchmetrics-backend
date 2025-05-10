@@ -47,3 +47,7 @@ export const updateTeamSchema = z.object({
 })
 
 export type UpdateTeamBody = z.infer<typeof updateTeamSchema>
+
+export const deleteTeamParamsSchema = updateTeamParamsSchema
+
+export type DeleteTeamParams = z.infer<typeof deleteTeamParamsSchema>

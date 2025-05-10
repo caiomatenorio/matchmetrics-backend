@@ -1,4 +1,14 @@
-import { Body, Controller, HttpCode, HttpStatus, Param, Post, Put, UsePipes } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  UsePipes,
+} from '@nestjs/common'
 import { TeamService } from './team.service'
 import { AdminOnly } from 'src/auth/auth.decorator'
 import { ZodValidationPipe } from 'src/zod-validation/zod-validation.pipe'
@@ -8,6 +18,8 @@ import SuccessResponseBody, {
 import {
   CreateTeamBody,
   createTeamSchema,
+  DeleteTeamParams,
+  deleteTeamParamsSchema,
   UpdateTeamBody,
   UpdateTeamParamsSchema,
   updateTeamSchema,
@@ -33,7 +45,23 @@ export class TeamController {
   @Put(':slug')
   @HttpCode(HttpStatus.OK)
   async updateTeam(
-    @Param(new ZodValidationPipe(updateTeamParamsSchema)) params: UpdateTeamParamsSchema,
+    @Param(new ZodValidationPipe(updateTeamSchema)) params: UpdateTeamParamsSchema,
     @Body(new ZodValidationPipe(updateTeamSchema)) body: UpdateTeamBody
-  ): Promise<NoDataSuccessResponseBody> {}
+  ): Promise<NoDataSuccessResponseBody> {
+    const { name, newSlug, shield } = body
+
+    await this.teamService.updateTeam(params.slug, name, newSlug, shield)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Team updated successfully')
+  }
+
+  @AdminOnly()
+  @Delete(':slug')
+  @UsePipes(new ZodValidationPipe(deleteTeamParamsSchema))
+  @HttpCode(HttpStatus.OK)
+  async deleteTeam(@Param() params: DeleteTeamParams): Promise<NoDataSuccessResponseBody> {
+    await this.teamService.deleteTeam(params.slug)
+
+    return new SuccessResponseBody(HttpStatus.OK, 'Team deleted successfully')
+  }
 }
